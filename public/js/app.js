@@ -274,8 +274,17 @@ function loadVehicleDataForMaintenance(page = 1) {
         },
         success: function (response) {
             $("#vehicle-tbody").empty();
-            console.log(response);
             response.data.forEach((vehicle) => {
+                let vehicleDue = ``;
+                if (vehicle.maintenance_date != null) {
+                    let maintenanceDate = new Date(vehicle.maintenance_date);
+                    let currentDate = new Date();
+                    let diffTime = Math.abs(maintenanceDate - currentDate);
+                    let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays > vehicle.reservice_level) {
+                        vehicleDue = `<span class="text-red-500 font-bold">Due</span>`;
+                    }
+                }
                 let vehiclestatus = vehicle.vehicle_status.name;
                 let actionButton =
                     "<button class='dark-button opacity-50 cursor-not-allowed' disabled>In use</button>";
@@ -287,6 +296,9 @@ function loadVehicleDataForMaintenance(page = 1) {
 
                 $("#vehicle-tbody").append(`
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                     <td class="px-2 py-4">
+                        ${vehicleDue}
+                    </td>
                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                         ${vehicle.plate_number}
                     </th>
@@ -296,6 +308,9 @@ function loadVehicleDataForMaintenance(page = 1) {
                                 ? vehicle.maintenance_date
                                 : "New Added"
                         }
+                    </td>
+                     <td class="px-6 py-4">
+                        ${vehicle.reservice_level}
                     </td>
                     <td class="px-6 py-4">
                         ${vehicle.vehicle_type.name}
@@ -421,6 +436,7 @@ function storeMaintenance() {
             hideFlowBytesModal("maintenance-form-modal");
             showAlertModal(1, response.message);
             loadMaintenanceData();
+            loadVehicleDataForMaintenance();
         },
         error: function (xhr, status, error) {
             const firstErrorMessage = xhr.responseJSON.errors;
@@ -458,6 +474,7 @@ function updateMaintenance(id) {
             hideFlowBytesModal("maintenance-form-modal");
             showAlertModal(1, response.message);
             loadMaintenanceData();
+            loadVehicleDataForMaintenance();
         },
         error: function (xhr, status, error) {
             const firstErrorMessage = xhr.responseJSON.errors;
@@ -476,6 +493,7 @@ function deleteMaintenance(id) {
         success: function (response) {
             showAlertModal(1, response.message);
             loadMaintenanceData();
+            loadVehicleDataForMaintenance();
         },
         error: function (xhr, status, error) {
             const firstErrorMessage = xhr.responseJSON.errors;
@@ -497,7 +515,7 @@ function openCreateSparepartModal() {
 
 function loadSupplierData(value = null) {
     $.ajax({
-        url: "/suppliers-data",
+        url: "/suppliers-for-dropdown",
         type: "GET",
         success: async function (response) {
             $("#sparepart-supplier").empty();
@@ -568,6 +586,11 @@ function loadSparepartData(page = 1) {
                     </td>
                     <td class="px-6 py-4">
                         ${sparepart.reorder_level}
+                    </td>
+                       <td class="px-6 py-4">
+                        ${sparepart.supplier.name} - ${
+                    sparepart.supplier.contact_number
+                }
                     </td>
                     <td class="px-6 py-4 flex items-center gap-2">
                         <button class="blue-button" type="button" onclick='openEditSparepartModal("${
@@ -642,3 +665,129 @@ function deleteSparepart(id) {
         },
     });
 }
+
+// ============================ END SPARE PART =======================//
+
+// ============================ SUPPLIER =======================//
+function loadSuppliersData(page = 1) {
+    $.ajax({
+        url: "/suppliers-data?page=" + page,
+        type: "GET",
+        data: {
+            search: $("#supplierSearch").val(),
+        },
+        success: function (response) {
+            $("#supplier-tbody").empty();
+            response.data.forEach((supplier) => {
+                $("#supplier-tbody").append(`
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        ${supplier.name}
+                    </th>
+                    <td class="px-6 py-4">
+                        ${supplier.contact_number}
+                    </td>
+                    <td class="px-6 py-4">
+                        ${supplier.address}
+                    </td>
+                    <td class="px-6 py-4 flex items-center gap-2">
+                        <button class="blue-button" type="button" onclick='openEditSupplierModal("${supplier.id}", "${supplier.name}", "${supplier.contact_number}", "${supplier.address}")'>Edit</button>
+                        <button class="red-button" type="button" onclick="showDeleteModal('deleteSupplier', '${supplier.id}')">Delete</button>
+                    </td>
+                </tr>
+                `);
+            });
+            buttonPagination(
+                "#supplier-pagination",
+                response.last_page,
+                response.current_page,
+                "loadSuppliersData"
+            );
+        },
+    });
+}
+
+function openCreateSupplierModal(type) {
+    $("#supplier-form-data")[0].reset();
+    $("#supplier-form-title").text("Create New Supplier");
+    showFlowBytesModal("supplier-form-modal");
+    $("#supplier-form-submit").attr("onclick", `storeSupplier('${type}')`);
+}
+
+function storeSupplier(type) {
+    let formData = new FormData(document.getElementById("supplier-form-data"));
+    $.ajax({
+        url: "/suppliers",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("supplier-form-modal");
+            showAlertModal(1, response.message);
+            if (type == "sparepart") {
+                loadSupplierData();
+            } else if (type == "supplier") {
+                loadSuppliersData();
+            }
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+
+function openEditSupplierModal(id, name, contactNumber, address) {
+    $("#supplier-form-title").text("Edit Supplier");
+    $("#supplier-name").val(name);
+    $("#supplier-contact-number").val(contactNumber);
+    $("#supplier-address").val(address);
+    showFlowBytesModal("supplier-form-modal");
+    $("#supplier-form-submit").attr("onclick", "updateSupplier(" + id + ")");
+}
+
+function updateSupplier(id) {
+    let formData = new FormData(document.getElementById("supplier-form-data"));
+    $.ajax({
+        url: "/suppliers/" + id,
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("supplier-form-modal");
+            showAlertModal(1, response.message);
+            loadSuppliersData();
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+
+function deleteSupplier(id) {
+    $.ajax({
+        url: "/suppliers/" + id,
+        type: "DELETE",
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            showAlertModal(1, response.message);
+            loadSuppliersData();
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+// ============================ END SUPPLIER =======================//

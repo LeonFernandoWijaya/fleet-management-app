@@ -34,6 +34,12 @@ class SparepartController extends Controller
             return response()->json(['errors' => $validator->errors()->first()], 422);
         }
 
+        $findSparepart = Sparepart::where('name', $request->input('sparepart-name'))->first();
+
+        if ($findSparepart) {
+            return response()->json(['errors' => 'Sparepart already exists!'], 422);
+        }
+
         $data = [
             'supplier_id' => $request->input('sparepart-supplier'),
             'name' => $request->input('sparepart-name'),
@@ -53,14 +59,14 @@ class SparepartController extends Controller
     public function getSparepartsData(Request $request)
     {
         $search = $request->input('search');
-        $spareparts = Sparepart::when($search, function ($query) use ($search) {
+        $spareparts = Sparepart::with('supplier')->when($search, function ($query) use ($search) {
             $query->where('name', 'like', "%$search%");
         })
             ->paginate(10);
         return response()->json($spareparts);
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
             'sparepart-name' => 'required|string',
@@ -73,7 +79,7 @@ class SparepartController extends Controller
             return response()->json(['errors' => $validator->errors()->first()], 422);
         }
 
-        $findSparepart = Sparepart::find($request->input('id'));
+        $findSparepart = Sparepart::find($id);
 
         if (!$findSparepart) {
             return response()->json(['errors' => 'Sparepart not found!'], 404);
@@ -87,7 +93,7 @@ class SparepartController extends Controller
         ];
 
         try {
-            Sparepart::updateRecord($request->input('id'), $data);
+            Sparepart::updateRecord($id, $data);
         } catch (\Exception $e) {
             return response()->json(['errors' => 'Something went wrong'], 404);
         }

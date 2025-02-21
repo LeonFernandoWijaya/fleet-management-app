@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\SparepartController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,8 +25,14 @@ Route::post('/maintenances/{id}', [MaintenanceController::class, 'update']);
 Route::delete('/maintenances/{id}', [MaintenanceController::class, 'destroy']);
 
 Route::get('/spareparts', [SparepartController::class, 'index']);
-Route::get('/suppliers-data', [SparepartController::class, 'getSupplierData']);
+Route::get('/suppliers-for-dropdown', [SparepartController::class, 'getSupplierData']);
 Route::post('/spareparts', [SparepartController::class, 'store']);
 Route::get('/spareparts-data', [SparepartController::class, 'getSparepartsData']);
 Route::post('/spareparts/{id}', [SparepartController::class, 'update']);
 Route::delete('/spareparts/{id}', [SparepartController::class, 'destroy']);
+
+Route::get('/suppliers', [SupplierController::class, 'index']);
+Route::get('/suppliers-data', [SupplierController::class, 'getSupplierData']);
+Route::post('/suppliers', [SupplierController::class, 'store']);
+Route::post('/suppliers/{id}', [SupplierController::class, 'update']);
+Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy']);
