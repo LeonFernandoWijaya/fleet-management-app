@@ -29,6 +29,11 @@ class Vehicle extends Model
         return $this->belongsTo(VehicleStatus::class);
     }
 
+    public function vehicleDocuments()
+    {
+        return $this->hasMany(VehicleDocument::class);
+    }
+
     public static function createRecord($data)
     {
         return self::create($data);

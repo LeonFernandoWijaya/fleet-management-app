@@ -275,16 +275,10 @@ function loadVehicleDataForMaintenance(page = 1) {
         success: function (response) {
             $("#vehicle-tbody").empty();
             response.data.forEach((vehicle) => {
-                let vehicleDue = ``;
-                if (vehicle.maintenance_date != null) {
-                    let maintenanceDate = new Date(vehicle.maintenance_date);
-                    let currentDate = new Date();
-                    let diffTime = Math.abs(maintenanceDate - currentDate);
-                    let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays > vehicle.reservice_level) {
-                        vehicleDue = `<span class="text-red-500 font-bold">Due</span>`;
-                    }
-                }
+                let vehicleDue =
+                    vehicle.needs_service == 1
+                        ? "<span class='text-red-500 font-bold'>Due</span>"
+                        : "";
                 let vehiclestatus = vehicle.vehicle_status.name;
                 let actionButton =
                     "<button class='dark-button opacity-50 cursor-not-allowed' disabled>In use</button>";
@@ -573,8 +567,8 @@ function loadSparepartData(page = 1) {
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                     <td class="px-2 py-4">
                         ${
-                            sparepart.stock <= sparepart.reorder_level
-                                ? `<span class="text-red-500 font-bold">Low</span>`
+                            sparepart.low_stock == 1
+                                ? "<span class='text-red-500 font-bold'>Low</span>"
                                 : ""
                         }
                     </td>
@@ -791,3 +785,198 @@ function deleteSupplier(id) {
     });
 }
 // ============================ END SUPPLIER =======================//
+
+// ============================ DOCUMENT =======================//
+function loadVehicleForDocumentData(page = 1) {
+    $.ajax({
+        url: "/vehicles-data-for-document?page=" + page,
+        type: "GET",
+        data: {
+            search: $("#vehicleSearch").val(),
+        },
+        success: function (response) {
+            $("#vehicle-tbody").empty();
+            response.data.forEach((vehicle) => {
+                let expiryColor =
+                    vehicle.total_expiry > 0
+                        ? "text-red-500"
+                        : "text-green-500";
+                $("#vehicle-tbody").append(`
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        ${vehicle.plate_number}
+                    </th>
+                    <td class="px-6 py-4">
+                        ${vehicle.total_documents}
+                    </td>
+                    <td class="px-6 py-4 ${expiryColor}">
+                        ${vehicle.total_expiry}
+                    </td>
+                    <td class="px-6 py-4 flex items-center gap-2">
+                        <button class="blue-button" type="button" onclick='openDocumentDataModal("${vehicle.id}")'>View</button>
+                    </td>
+                </tr>
+                `);
+            });
+            buttonPagination(
+                "#vehicle-pagination",
+                response.last_page,
+                response.current_page,
+                "loadVehicleForDocumentData"
+            );
+        },
+    });
+}
+
+function openDocumentDataModal(vehicleId) {
+    $("#document-id").val(vehicleId);
+    loadDocumentData();
+    showFlowBytesModal("list-modal");
+}
+
+function loadDocumentData(page = 1) {
+    $.ajax({
+        url: "/documents-data?page=" + page,
+        type: "GET",
+        data: {
+            vehicle_id: $("#document-id").val(),
+        },
+        success: function (response) {
+            $("#document-tbody").empty();
+            response.data.forEach((document) => {
+                $("#document-tbody").append(`
+                <div class="flex items-center justify-between gap-4 p-2 rounded-xl border border-gray-300 dark:border-gray-700">
+                    <div class="flex flex-col gap-2 text-xs text-gray-900 dark:text-white">
+                        <div>
+                            Name : ${document.name}
+                        </div>
+                        <div>
+                            Expired Date : <span class="${
+                                document.is_expired == true
+                                    ? "text-red-500"
+                                    : ""
+                            }">${document.expiry_date}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <a href="${baseUrl}/documents/download/${
+                    document.path
+                }" class="focus:outline-none text-white bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-3 py-2.5 dark:focus:ring-yellow-900" onclick="">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                </svg>
+                            </a>
+                            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" onclick="openEditDocumentModal('${
+                                document.id
+                            }', '${document.name}', '${document.expiry_date}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
+                            </button>
+                            <button class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-2.5 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900" onclick="showDeleteModal('deleteDocument', '${
+                                document.id
+                            }')">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `);
+            });
+            buttonPagination(
+                "#document-pagination",
+                response.last_page,
+                response.current_page,
+                "loadDocumentData"
+            );
+        },
+    });
+}
+
+function openCreateDocumentModal() {
+    $("#document-form-data")[0].reset();
+    $("#document-form-title").text("Create New Document");
+    showFlowBytesModal("document-form-modal");
+    $("#document-form-submit").attr("onclick", "storeDocument()");
+}
+
+function storeDocument() {
+    let formData = new FormData(document.getElementById("document-form-data"));
+    formData.append("vehicle_id", $("#document-id").val());
+    let file = $("#document-file")[0].files[0];
+    formData.append("file", file);
+    $.ajax({
+        url: "/documents",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("document-form-modal");
+            showAlertModal(1, response.message);
+            loadDocumentData();
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+
+function openEditDocumentModal(id, name, expiryDate) {
+    $("#document-form-title").text("Edit Document");
+    $("#document-name").val(name);
+    $("#document-expiry-date").val(expiryDate);
+    showFlowBytesModal("document-form-modal");
+    $("#document-form-submit").attr("onclick", "updateDocument(" + id + ")");
+}
+
+function updateDocument(id) {
+    let formData = new FormData(document.getElementById("document-form-data"));
+    let file = $("#document-file")[0].files[0];
+    formData.append("file", file);
+    $.ajax({
+        url: "/documents/" + id,
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("document-form-modal");
+            showAlertModal(1, response.message);
+            loadDocumentData();
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+
+function deleteDocument(id) {
+    $.ajax({
+        url: "/documents/" + id,
+        type: "DELETE",
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            showAlertModal(1, response.message);
+            loadDocumentData();
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+// ============================ END DOCUMENT =======================//

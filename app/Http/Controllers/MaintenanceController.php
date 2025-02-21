@@ -64,6 +64,8 @@ class MaintenanceController extends Controller
                 $query->where('plate_number', 'like', '%' . $search . '%');
             })
             ->select('vehicles.*', 'vehicle_maintenances.date as maintenance_date')
+            ->selectRaw('CASE WHEN DATEDIFF(CURDATE(), vehicle_maintenances.date) >= vehicles.reservice_level THEN 1 ELSE 0 END AS needs_service')
+            ->orderByDesc('needs_service')
             ->paginate(10);
 
         return response()->json($vehicles, 200);

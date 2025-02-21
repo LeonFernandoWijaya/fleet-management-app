@@ -59,9 +59,13 @@ class SparepartController extends Controller
     public function getSparepartsData(Request $request)
     {
         $search = $request->input('search');
-        $spareparts = Sparepart::with('supplier')->when($search, function ($query) use ($search) {
-            $query->where('name', 'like', "%$search%");
-        })
+        $spareparts = Sparepart::with('supplier')
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', "%$search%");
+            })
+            ->select('*')
+            ->selectRaw('CASE WHEN stock <= reorder_level THEN 1 ELSE 0 END AS low_stock')
+            ->orderByDesc('low_stock')
             ->paginate(10);
         return response()->json($spareparts);
     }

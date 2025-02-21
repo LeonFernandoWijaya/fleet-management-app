@@ -4,6 +4,7 @@ use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\SparepartController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VehicleDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -36,3 +37,11 @@ Route::get('/suppliers-data', [SupplierController::class, 'getSupplierData']);
 Route::post('/suppliers', [SupplierController::class, 'store']);
 Route::post('/suppliers/{id}', [SupplierController::class, 'update']);
 Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy']);
+
+Route::get('/documents', [VehicleDocumentController::class, 'index']);
+Route::get('/documents-data', [VehicleDocumentController::class, 'getDocumentsData']);
+Route::post('/documents', [VehicleDocumentController::class, 'store']);
+Route::post('/documents/{id}', [VehicleDocumentController::class, 'update']);
+Route::delete('/documents/{id}', [VehicleDocumentController::class, 'destroy']);
+Route::get('/vehicles-data-for-document', [VehicleDocumentController::class, 'getVehicleDataForDocument']);
+Route::get('documents/download/{filename}', [VehicleDocumentController::class, 'download']);

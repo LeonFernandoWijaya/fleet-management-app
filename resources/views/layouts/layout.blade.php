@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="base-url" content="{{ url('/') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    @vite(['resources/css/style.css', 'resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/style.css', 'resources/js/app.js', 'resources/css/app.css'])
     <script src="{{ url('js/app.js') }}"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
