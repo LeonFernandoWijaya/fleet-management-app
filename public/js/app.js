@@ -803,6 +803,13 @@ function loadVehicleForDocumentData(page = 1) {
                         : "text-green-500";
                 $("#vehicle-tbody").append(`
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                    <td class="px-2 py-4">
+                        ${
+                            vehicle.total_expiry > 0
+                                ? "<span class='text-red-500 font-bold'>Exp</span>"
+                                : ""
+                        }
+                    </td>
                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                         ${vehicle.plate_number}
                     </th>
@@ -813,7 +820,9 @@ function loadVehicleForDocumentData(page = 1) {
                         ${vehicle.total_expiry}
                     </td>
                     <td class="px-6 py-4 flex items-center gap-2">
-                        <button class="blue-button" type="button" onclick='openDocumentDataModal("${vehicle.id}")'>View</button>
+                        <button class="blue-button" type="button" onclick='openDocumentDataModal("${
+                            vehicle.id
+                        }")'>View</button>
                     </td>
                 </tr>
                 `);
