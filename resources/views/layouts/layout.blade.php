@@ -12,6 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="" type="image/x-icon">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <title>COAL HAULING COMPANY</title>
 </head>
 
