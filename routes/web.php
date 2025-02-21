@@ -4,6 +4,7 @@ use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\SparepartController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TrackController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VehicleDocumentController;
 use Illuminate\Support\Facades\Route;
@@ -46,5 +47,11 @@ Route::post('/documents/{id}', [VehicleDocumentController::class, 'update']);
 Route::delete('/documents/{id}', [VehicleDocumentController::class, 'destroy']);
 Route::get('/vehicles-data-for-document', [VehicleDocumentController::class, 'getVehicleDataForDocument']);
 Route::get('documents/download/{filename}', [VehicleDocumentController::class, 'download']);
+
+Route::get('/users', [UserController::class, 'index']);
+Route::post('/users', [UserController::class, 'store']);
+Route::get('/users-data', [UserController::class, 'getUsersData']);
+Route::post('/users/{id}', [UserController::class, 'update']);
+Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
 Route::get('/track', [TrackController::class, 'index']);

@@ -989,3 +989,134 @@ function deleteDocument(id) {
     });
 }
 // ============================ END DOCUMENT =======================//
+
+// ============================ USER =======================//
+function loadUserData(page = 1) {
+    $.ajax({
+        url: "/users-data?page=" + page,
+        type: "GET",
+        data: {
+            search: $("#userSearch").val(),
+            status: $('input[name="userStatusFilter"]:checked').val(),
+        },
+        success: function (response) {
+            $("#user-tbody").empty();
+            response.data.forEach((user) => {
+                $("#user-tbody").append(`
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        ${user.name}
+                    </th>
+                    <td class="px-6 py-4">
+                        ${user.email}
+                    </td>
+                    <td class="px-6 py-4">
+                        ${user.role.name}
+                    </td>
+                    <td class="px-6 py-4">
+                        ${user.is_active == 1 ? "Active" : "Inactive"}
+                    </td>
+                    <td class="px-6 py-4 flex items-center gap-2">
+                        <button class="blue-button" type="button" onclick='openEditUserModal("${
+                            user.id
+                        }", "${user.name}", "${user.email}", "${
+                    user.role_id
+                }", "${user.is_active}")'>Edit</button>
+                        <button class="red-button
+                        " type="button" onclick="showDeleteModal('deleteUser', '${
+                            user.id
+                        }')">Delete</button>
+                    </td>
+                </tr>
+                `);
+            });
+            buttonPagination(
+                "#user-pagination",
+                response.last_page,
+                response.current_page,
+                "loadUserData"
+            );
+        },
+    });
+}
+
+function openCreateUserModal() {
+    $("#user-form-data")[0].reset();
+    $("#user-form-title").text("Create New User");
+    showFlowBytesModal("user-form-modal");
+    $("#user-form-submit").attr("onclick", "storeUser()");
+}
+
+function storeUser() {
+    let formData = new FormData(document.getElementById("user-form-data"));
+    $.ajax({
+        url: "/users",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("user-form-modal");
+            showAlertModal(1, response.message);
+            loadUserData();
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+
+function openEditUserModal(id, name, email, role, status) {
+    $("#user-form-title").text("Edit User");
+    $("#user-name").val(name);
+    $("#user-email").val(email);
+    $("#user-role").val(role);
+    $("#user-status").val(status);
+    showFlowBytesModal("user-form-modal");
+    $("#user-form-submit").attr("onclick", "updateUser(" + id + ")");
+}
+
+function updateUser(id) {
+    let formData = new FormData(document.getElementById("user-form-data"));
+    $.ajax({
+        url: "/users/" + id,
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("user-form-modal");
+            showAlertModal(1, response.message);
+            loadUserData();
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+
+function deleteUser(id) {
+    $.ajax({
+        url: "/users/" + id,
+        type: "DELETE",
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            showAlertModal(1, response.message);
+            loadUserData();
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
