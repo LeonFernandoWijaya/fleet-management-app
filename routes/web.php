@@ -91,4 +91,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/get-vehicle-group-by-status', [DashboardController::class, 'getVehicleGroupByStatus']);
     Route::get('/get-trips-group-by-status', [DashboardController::class, 'getTripsGroupByStatus']);
+    Route::get('/get-vehicle-reports-group-by-fixed', [DashboardController::class, 'getVehicleReportsGroupByFixed']);
+    Route::get('/get-maintenances-group-by-reservice-level', [DashboardController::class, 'getMaintenancesGroupByReserviceLevel']);
+    Route::get('get-spareparts-group-by-reorder-level', [DashboardController::class, 'getSparepartGroupByReorderLevel']);
+    Route::get('/get-documents-group-by-expiry-date', [DashboardController::class, 'getDocumentGroupByExpiryDate']);
 });

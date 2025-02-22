@@ -1769,22 +1769,183 @@ function markAsFixed(id) {
 function refreshDashboard() {
     getVehicleGroupByStatus();
     getTripsGroupByStatus();
+    getVehicleReportsGroupByFixed();
+    getMaintenancesGroupByReserviceLevel();
+    getSparepartGroupByReorderLevel();
+    getDocumentGroupByExpiryDate();
 }
 
 function getVehicleGroupByStatus() {
+    $("#vehicle-status-chart").empty();
     $.ajax({
         url: "/get-vehicle-group-by-status",
         type: "GET",
-        success: async function (response) {},
+        success: async function (response) {
+            let color = "";
+            await response.forEach((vehicle) => {
+                if (vehicle.name == "Available") {
+                    color = "green";
+                } else if (vehicle.name == "In Use") {
+                    color = "yellow";
+                } else {
+                    color = "red";
+                }
+                $("#vehicle-status-chart").append(`
+                    <div class="flex flex-col gap-4 border border-${color}-300 dark:border-${color}-700 p-4 rounded-xl">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-${color}-500 rounded-full"></div>
+                                <p>${vehicle.total} ${vehicle.name}</p>
+                            </div>
+                        </div>
+                `);
+            });
+        },
     });
 }
 
 function getTripsGroupByStatus() {
+    $("#trip-chart").empty();
     $.ajax({
         url: "/get-trips-group-by-status",
         type: "GET",
         success: function (response) {
-            // console.log(response);
+            let color = "";
+            response.forEach((trip) => {
+                if (trip.name == "Scheduled") {
+                    color = "blue";
+                } else if (trip.name == "In Progress") {
+                    color = "yellow";
+                } else if (trip.name == "Delayed") {
+                    color = "red";
+                } else {
+                    color = "green";
+                }
+                $("#trip-chart").append(`
+                    <div class="flex flex-col gap-4 border border-${color}-300 dark:border-${color}-700 p-4 rounded-xl">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-${color}-500 rounded-full"></div>
+                                <p>${trip.total} ${trip.name}</p>
+                            </div>
+                        </div>
+                `);
+            });
+        },
+    });
+}
+
+function getVehicleReportsGroupByFixed() {
+    $("#vehicle-report-chart").empty();
+    $.ajax({
+        url: "/get-vehicle-reports-group-by-fixed",
+        type: "GET",
+        success: function (response) {
+            let color = "";
+            response.forEach((report) => {
+                if (report.is_fixed == 1) {
+                    color = "green";
+                } else {
+                    color = "red";
+                }
+                $("#vehicle-report-chart").append(`
+                    <div class="flex flex-col gap-4 border border-${color}-300 dark:border-${color}-700 p-4 rounded-xl">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-${color}-500 rounded-full"></div>
+                                <p>${report.total} ${
+                    report.is_fixed == 1 ? "Fixed" : "Not Fixed"
+                }</p>
+                            </div>
+                        </div>
+                `);
+            });
+        },
+    });
+}
+
+function getMaintenancesGroupByReserviceLevel() {
+    $("#maintenance-chart").empty();
+    $.ajax({
+        url: "/get-maintenances-group-by-reservice-level",
+        type: "GET",
+        success: function (response) {
+            let color = "";
+            Object.keys(response).forEach((key) => {
+                if (key == "no_service_needed") {
+                    color = "green";
+                } else {
+                    color = "red";
+                }
+                $("#maintenance-chart").append(`
+                    <div class="flex flex-col gap-4 border border-${color}-300 dark:border-${color}-700 p-4 rounded-xl">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-${color}-500 rounded-full"></div>
+                                <p>${
+                                    key == "no_service_needed"
+                                        ? "Good"
+                                        : "Expired"
+                                } ${response[key]}</p>
+                            </div>
+                        </div>
+                `);
+            });
+        },
+    });
+}
+
+function getSparepartGroupByReorderLevel() {
+    $("#sparepart-chart").empty();
+    $.ajax({
+        url: "/get-spareparts-group-by-reorder-level",
+        type: "GET",
+        success: function (response) {
+            let color = "";
+            Object.keys(response).forEach((key) => {
+                if (key == "no_restock") {
+                    color = "green";
+                } else {
+                    color = "red";
+                }
+                $("#sparepart-chart").append(`
+                    <div class="flex flex-col gap-4 border border-${color}-300 dark:border-${color}-700 p-4 rounded-xl">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-${color}-500 rounded-full"></div>
+                                <p>${
+                                    key == "need_restock"
+                                        ? "Low Stock"
+                                        : "High Stock"
+                                } ${response[key]}</p>
+                            </div>
+                        </div>
+                `);
+            });
+        },
+    });
+}
+
+function getDocumentGroupByExpiryDate() {
+    $("#document-chart").empty();
+    $.ajax({
+        url: "/get-documents-group-by-expiry-date",
+        type: "GET",
+        success: function (response) {
+            console.log(response);
+            let color = "";
+            Object.keys(response).forEach((key) => {
+                if (key == "expired") {
+                    color = "red";
+                } else {
+                    color = "green";
+                }
+                $("#document-chart").append(`
+                    <div class="flex flex-col gap-4 border border-${color}-300 dark:border-${color}-700 p-4 rounded-xl">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-${color}-500 rounded-full"></div>
+                                <p>${key == "expired" ? "Expired" : "Good"} ${
+                    response[key]
+                }</p>
+                            </div>
+                        </div>
+                `);
+            });
         },
     });
 }

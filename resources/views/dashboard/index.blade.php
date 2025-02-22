@@ -19,76 +19,28 @@
                 <div class="border-b border-gray-300 dark:border-gray-700 pb-4">
                     <p class="font-bold text-lg">Vehicle Status</p>
                 </div>
-                <div class="py-6" id="vehicle-status-chart"></div>
+                <div class="flex flex-col gap-4 text-sm" id="vehicle-status-chart">
+                </div>
             </div>
             <div class="flex flex-col gap-4 p-4 rounded-xl border border-gray-300 dark:border-gray-700 ">
                 <div class="border-b border-gray-300 dark:border-gray-700 pb-4">
                     <p class="font-bold text-lg">Trips</p>
                 </div>
-                <div class="flex flex-col gap-4 text-sm">
-                    <div class="flex flex-col gap-4 border border-blue-300 dark:border-blue-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-                            <p>53 Scheduled</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col gap-4 border border-yellow-300 dark:border-yellow-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                            <p>12 In Progress</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col gap-4 border border-red-300 dark:border-red-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <p>5 Delayed</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col gap-4 border border-green-300 dark:border-green-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <p>5 Completed</p>
-                        </div>
-                    </div>
+                <div class="flex flex-col gap-4 text-sm" id="trip-chart">
                 </div>
             </div>
             <div class="flex flex-col gap-4 p-4 rounded-xl border border-gray-300 dark:border-gray-700 ">
                 <div class="border-b border-gray-300 dark:border-gray-700 pb-4">
                     <p class="font-bold text-lg">Vehicle Reports</p>
                 </div>
-                <div class="flex flex-col gap-4 text-sm">
-                    <div class="flex flex-col gap-4 border border-green-300 dark:border-green-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <p>5 Fixed</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col gap-4 border border-red-300 dark:border-red-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <p>5 Not Fixed</p>
-                        </div>
-                    </div>
-
+                <div class="flex flex-col gap-4 text-sm" id="vehicle-report-chart">
                 </div>
             </div>
             <div class="flex flex-col gap-4 p-4 rounded-xl border border-gray-300 dark:border-gray-700 ">
                 <div class="border-b border-gray-300 dark:border-gray-700 pb-4">
                     <p class="font-bold text-lg">Maintenances</p>
                 </div>
-                <div class="flex flex-col gap-4 text-sm">
-                    <div class="flex flex-col gap-4 border border-green-300 dark:border-green-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <p>5 Good</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col gap-4 border border-red-300 dark:border-red-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <p>5 Due</p>
-                        </div>
-                    </div>
+                <div class="flex flex-col gap-4 text-sm" id="maintenance-chart">
 
                 </div>
             </div>
@@ -96,40 +48,14 @@
                 <div class="border-b border-gray-300 dark:border-gray-700 pb-4">
                     <p class="font-bold text-lg">Spareparts</p>
                 </div>
-                <div class="flex flex-col gap-4 text-sm">
-                    <div class="flex flex-col gap-4 border border-green-300 dark:border-green-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <p>5 High</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col gap-4 border border-red-300 dark:border-red-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <p>5 Low</p>
-                        </div>
-                    </div>
-
+                <div class="flex flex-col gap-4 text-sm" id="sparepart-chart">
                 </div>
             </div>
             <div class="flex flex-col gap-4 p-4 rounded-xl border border-gray-300 dark:border-gray-700 ">
                 <div class="border-b border-gray-300 dark:border-gray-700 pb-4">
                     <p class="font-bold text-lg">Documents</p>
                 </div>
-                <div class="flex flex-col gap-4 text-sm">
-                    <div class="flex flex-col gap-4 border border-green-300 dark:border-green-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <p>5 Valid</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col gap-4 border border-red-300 dark:border-red-700 p-4 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <p>5 Expired</p>
-                        </div>
-                    </div>
-
+                <div class="flex flex-col gap-4 text-sm" id="document-chart">
                 </div>
             </div>
 
@@ -140,6 +66,10 @@
         $(document).ready(function() {
             getVehicleGroupByStatus();
             getTripsGroupByStatus();
+            getVehicleReportsGroupByFixed();
+            getMaintenancesGroupByReserviceLevel();
+            getSparepartGroupByReorderLevel();
+            getDocumentGroupByExpiryDate();
         });
     </script>
 @endsection

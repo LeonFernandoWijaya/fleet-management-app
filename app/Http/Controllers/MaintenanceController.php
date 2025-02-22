@@ -92,6 +92,7 @@ class MaintenanceController extends Controller
         ];
         try {
             VehicleMaintenance::create($data);
+            return response()->json(['message' => 'Maintenance has been successfully added.'], 200);
         } catch (\Exception $e) {
             return response()->json(['errors' => 'Failed to add maintenance.'], 422);
         }

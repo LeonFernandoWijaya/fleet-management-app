@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('vehicles', function (Blueprint $table) {
-            //
-            $table->date('last_service')->nullable()->after('reservice_level');
+        Schema::create('modules', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
         });
     }
 
@@ -22,9 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('vehicles', function (Blueprint $table) {
-            //
-            $table->dropColumn('last_service');
-        });
+        Schema::dropIfExists('modules');
     }
 };
