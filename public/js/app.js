@@ -127,6 +127,26 @@ function tooglePassword(id) {
         input.type = "password";
     }
 }
+
+function toogleCheckAll(event, target) {
+    if (event.checked) {
+        $(`input[name='${target}']`).prop("checked", true);
+    } else {
+        $(`input[name='${target}']`).prop("checked", false);
+    }
+}
+function triggerCheckAll(checkboxSelector, targetCheckAll) {
+    const checkboxes = $(checkboxSelector);
+    const specificCheckbox = $(targetCheckAll);
+
+    checkboxes.on("change", function () {
+        if (checkboxes.length === checkboxes.filter(":checked").length) {
+            specificCheckbox.prop("checked", true);
+        } else {
+            specificCheckbox.prop("checked", false);
+        }
+    });
+}
 // ============================ VEHICLES =======================//
 function loadVehicleData(page = 1) {
     $.ajax({
@@ -1946,6 +1966,154 @@ function getDocumentGroupByExpiryDate() {
                         </div>
                 `);
             });
+        },
+    });
+}
+
+// ============================ END DASHBOARD =======================//
+
+// ============================ ROLE =======================//
+function openCreateRoleModal() {
+    $("#role-form-data")[0].reset();
+    $("#role-form-title").text("Create New Role");
+    showFlowBytesModal("role-form-modal");
+    $("#role-form-submit").attr("onclick", "storeRole()");
+}
+
+function storeRole() {
+    let form = document.getElementById("role-form-data");
+    let formData = new FormData(form);
+    $.ajax({
+        url: "/roles",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("role-form-modal");
+            showAlertModal(1, response.message);
+            loadRoleData();
+        },
+        error: function (xhr, status, error) {
+            const errors = xhr.responseJSON.errors;
+            showAlertModal(0, errors);
+        },
+    });
+}
+
+function openEditRoleModal(id, name, permissions) {
+    $("#role-form-data")[0].reset();
+    $("#role-form-title").text("Edit Role");
+    showFlowBytesModal("role-form-modal");
+    $("#roleName").val(name);
+    $("#role-form-submit").attr("onclick", "updateRole(" + id + ")");
+    const decodedPermissions = JSON.parse(decodeURIComponent(permissions));
+    let totalModuleActionsChecked = 0;
+    decodedPermissions.forEach((permission) => {
+        if (permission.is_active == 1) {
+            $("#moduleAction" + permission.module_action_id).prop(
+                "checked",
+                true
+            );
+            totalModuleActionsChecked++;
+        }
+    });
+    let totalInputModuleActions = $('input[name="moduleActions[]"]').length;
+    if (totalModuleActionsChecked < totalInputModuleActions) {
+        $(`input[name="allCheckbox"]`).prop("checked", false);
+    } else if (totalModuleActionsChecked == totalInputModuleActions) {
+        $(`input[name="allCheckbox"]`).prop("checked", true);
+    }
+}
+
+function updateRole(id) {
+    let form = document.getElementById("role-form-data");
+    let formData = new FormData(form);
+    $.ajax({
+        url: "/roles/" + id,
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("role-form-modal");
+            showAlertModal(1, response.message);
+            loadRoleData();
+        },
+        error: function (xhr, status, error) {
+            const errors = xhr.responseJSON.errors;
+            showAlertModal(0, errors);
+        },
+    });
+}
+
+function deleteRole(id) {
+    $.ajax({
+        url: "/roles/" + id,
+        type: "DELETE",
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            showAlertModal(1, response.message);
+            loadRoleData();
+        },
+        error: function (xhr, status, error) {
+            const errors = xhr.responseJSON.errors;
+            showAlertModal(0, errors);
+        },
+    });
+}
+
+function loadRoleData(page = 1) {
+    let roleSearch = $("#roleSearch").val();
+    $("#role-tbody").empty();
+    $.ajax({
+        url: "/roles-data" + "?page=" + page,
+        type: "GET",
+        data: {
+            search: roleSearch,
+        },
+        success: function (response) {
+            response.role.data.forEach((element) => {
+                const permissions = encodeURIComponent(
+                    JSON.stringify(element.permissions)
+                );
+                let editButton = true
+                    ? `<button class="blue-button" onclick="openEditRoleModal('${element.id}', '${element.name}', '${permissions}')">Edit</button>`
+                    : "";
+
+                let deleteButton = true
+                    ? `<button class="red-button" onclick="showDeleteModal('deleteRole','${element.id}')">Delete</button>`
+                    : "";
+                $("#role-tbody").append(`
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            ${element.name}
+                        </th>
+                        <td class="px-6 py-4 flex gap-2 items-center">
+                            ${editButton}
+                            ${deleteButton}
+                        </td>
+                    </tr>
+                `);
+            });
+            buttonPagination(
+                "#role-pagination",
+                response.role.last_page,
+                response.role.current_page,
+                "loadRoleData"
+            );
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
         },
     });
 }

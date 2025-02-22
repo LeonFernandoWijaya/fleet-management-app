@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SparepartController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TrackController;
@@ -95,4 +96,10 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/get-maintenances-group-by-reservice-level', [DashboardController::class, 'getMaintenancesGroupByReserviceLevel']);
     Route::get('get-spareparts-group-by-reorder-level', [DashboardController::class, 'getSparepartGroupByReorderLevel']);
     Route::get('/get-documents-group-by-expiry-date', [DashboardController::class, 'getDocumentGroupByExpiryDate']);
+
+    Route::get('/roles', [RoleController::class, 'index']);
+    Route::post('/roles', [RoleController::class, 'store']);
+    Route::get('/roles-data', [RoleController::class, 'getRolesData']);
+    Route::post('/roles/{id}', [RoleController::class, 'update']);
+    Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
 });
