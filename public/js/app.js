@@ -1396,11 +1396,246 @@ function storeChangePassword() {
 // ============================ END AUTH =======================//
 // ============================ TRACK =======================//
 function getTrackForDriver() {
+    $("#track-refresh-icon").addClass("animate-spin");
     $.ajax({
         url: "/get-track-for-driver",
         type: "GET",
         success: function (response) {
-            console.log(response);
+            $("#track-refresh-icon").removeClass("animate-spin");
+            $("#track-tbody").empty();
+            if (
+                response.trip_status_id == 1 ||
+                response.trip_status_id == 2 ||
+                response.trip_status_id == 3
+            ) {
+                $("#track-tbody").append(`
+                    <div class="flex justify-between items-center">
+                        <button class="red-button" type="button" onclick="openVehicleReportModal('${response.id}')">Report Vehicle Issue</button>
+                        <div id="reportTripIssueButton">
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-4 text-sm font-medium">
+                        <div>
+                            Plate number : ${response.vehicle.plate_number} (${response.vehicle.vehicle_type.name})
+                        </div>
+                        <div>
+                            Driver : ${response.user.name}
+                        </div>
+                        <div>
+                            Scheduled Time : ${response.departure_time} - ${response.arrival_time}
+                        </div>
+                        <div>
+                            Location : ${response.departure_location} to ${response.arrival_location}
+                        </div>
+                    </div>
+                    <div class="w-full flex items-center justify-center" id="changeStatusButton">
+                    </div>
+                `);
+                if (response.trip_status_id == 1) {
+                    $("#changeStatusButton").append(`
+                          <button type="button" onclick="openTrackConfirmationModal('${response.id}', '1')"
+                            class="text-blue-700 border-2 border-blue-700 hover:bg-blue-700 hover:text-white focus:ring-4 focus:outline-none w-40 h-40 justify-center focus:ring-blue-300 font-medium rounded-full text-xl p-2.5 text-center animate-pulse flex items-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:focus:ring-blue-800 dark:hover:bg-blue-500">
+                            Start
+                        </button>
+                    `);
+                } else if (
+                    response.trip_status_id == 2 ||
+                    response.trip_status_id == 3
+                ) {
+                    $("#changeStatusButton").append(`
+                          <button type="button" onclick="openTrackConfirmationModal('${response.id}', '2')"
+                            class="text-green-700 border-2 border-green-700 hover:bg-green-700 hover:text-white focus:ring-4 focus:outline-none w-40 h-40 justify-center focus:ring-green-300 font-medium rounded-full text-xl p-2.5 text-center animate-pulse flex items-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:focus:ring-green-800 dark:hover:bg-green-500">
+                            Finish
+                        </button>
+                    `);
+                }
+
+                if (response.trip_status_id == 3) {
+                    $("#reportTripIssueButton").append(`
+                        <button class="py-2.5 px-5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600" type="button" disabled>Issue Reported</button>
+                    `);
+                } else if (response.trip_status_id == 2) {
+                    $("#reportTripIssueButton").append(`
+                        <button class="dark-button" type="button" onclick="openTripReportModal('${response.id}')">Report Trip Issue</button>
+                    `);
+                }
+            } else {
+                $("#track-tbody").append(`
+                    <div class="text-center text-sm font-bold pt-10">You are not assigned in any trip</div>
+                `);
+            }
+        },
+    });
+}
+
+function openVehicleReportModal(id) {
+    showFlowBytesModal("vehicle-report-form-modal");
+    $("#vehicle-report-form-title").text("Report Vehicle Issue");
+    $("#vehicle-report-form-data")[0].reset();
+    $("#vehicle-report-form-submit").attr(
+        "onclick",
+        "storeVechileReport(" + id + ")"
+    );
+}
+
+function storeVechileReport(id) {
+    let formData = new FormData(
+        document.getElementById("vehicle-report-form-data")
+    );
+    $.ajax({
+        url: "/report-vehicle-for-driver/" + id,
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("vehicle-report-form-modal");
+            showAlertModal(1, response.message);
+        },
+        error: function (xhr, status, error) {
+            const errors = xhr.responseJSON.errors;
+            showAlertModal(0, errors);
+        },
+    });
+}
+
+function openTripReportModal(id) {
+    showFlowBytesModal("trip-report-form-modal");
+    $("#trip-report-form-title").text("Report Trip Issue");
+    $("#trip-report-form-data")[0].reset();
+    $("#trip-report-form-submit").attr(
+        "onclick",
+        "storeTripReport(" + id + ")"
+    );
+}
+
+function storeTripReport(id) {
+    let formData = new FormData(
+        document.getElementById("trip-report-form-data")
+    );
+    $.ajax({
+        url: "/report-trip-for-driver/" + id,
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            getTrackForDriver();
+            hideFlowBytesModal("trip-report-form-modal");
+            showAlertModal(1, response.message);
+        },
+        error: function (xhr, status, error) {
+            const errors = xhr.responseJSON.errors;
+            showAlertModal(0, errors);
+        },
+    });
+}
+
+function openTrackConfirmationModal(id, status) {
+    showFlowBytesModal("track-confirmation-modal");
+    if (status == 1) {
+        $("#track-confirmation-title").text("Start Trip");
+        $("#track-confirmation-message").text(
+            "Are you sure want to start this trip?"
+        );
+        $("#track-confirmation-submit-button").attr(
+            "onclick",
+            "startTrackingForDriver(" + id + ")"
+        );
+    } else {
+        $("#track-confirmation-title").text("Finish Trip");
+        $("#track-confirmation-message").text(
+            "Are you sure want to finish this trip?"
+        );
+        $("#track-confirmation-submit-button").attr(
+            "onclick",
+            "finishTrackingForDriver(" + id + ")"
+        );
+    }
+}
+
+function startTrackingForDriver(id) {
+    $.ajax({
+        url: "/start-tracking-for-driver/" + id,
+        type: "POST",
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            getTrackForDriver();
+            hideFlowBytesModal("track-confirmation-modal");
+            showAlertModal(1, response.message);
+        },
+        error: function (xhr, status, error) {
+            const errors = xhr.responseJSON.errors;
+            showAlertModal(0, errors);
+        },
+    });
+}
+
+function finishTrackingForDriver(id) {
+    $.ajax({
+        url: "/finish-tracking-for-driver/" + id,
+        type: "POST",
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            getTrackForDriver();
+            hideFlowBytesModal("track-confirmation-modal");
+            showAlertModal(1, response.message);
+        },
+        error: function (xhr, status, error) {
+            const errors = xhr.responseJSON.errors;
+            showAlertModal(0, errors);
+        },
+    });
+}
+
+function openTrackHistoryForDriver() {
+    showFlowBytesModal("history-modal");
+    loadTrackHistoryForDriver();
+}
+
+function loadTrackHistoryForDriver(page = 1) {
+    $.ajax({
+        url: "/track-history-for-driver?page=" + page,
+        type: "GET",
+        success: function (response) {
+            $("#history-tbody").empty();
+            response.data.forEach((history) => {
+                $("#history-tbody").append(`
+                    <div
+                        class="flex items-center justify-between gap-4 p-2 rounded-xl border border-gray-300 dark:border-gray-700">
+                        <div class="flex flex-col gap-2 text-xs text-gray-900 dark:text-white">
+                            <div>
+                                Vehicle : ${history.vehicle.plate_number} (${history.vehicle.vehicle_type.name})
+                            </div>
+                            <div>
+                                Status : ${history.trip_status.name}
+                            </div>
+                            <div>
+                                Scheduled Time : ${history.departure_time} - ${history.arrival_time}
+                            </div>
+                            <div>
+                                Actual Time : ${history.actual_departure_time} - ${history.actual_arrival_time}
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+            buttonPagination(
+                "#history-pagination",
+                response.last_page,
+                response.current_page,
+                "loadTrackHistoryForDriver"
+            );
         },
     });
 }

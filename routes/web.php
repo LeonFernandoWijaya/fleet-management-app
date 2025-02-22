@@ -75,4 +75,9 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::get('/track', [TrackController::class, 'index']);
     Route::get('/get-track-for-driver', [TrackController::class, 'getTrackForDriver']);
+    Route::post('/report-vehicle-for-driver/{id}', [TrackController::class, 'reportVehicleForDriver']);
+    Route::post('/report-trip-for-driver/{id}', [TrackController::class, 'reportTripForDriver']);
+    Route::post('/start-tracking-for-driver/{id}', [TrackController::class, 'startTrackingForDriver']);
+    Route::post('/finish-tracking-for-driver/{id}', [TrackController::class, 'finishTrackingForDriver']);
+    Route::get('/track-history-for-driver', [TrackController::class, 'trackHistoryForDriver']);
 });

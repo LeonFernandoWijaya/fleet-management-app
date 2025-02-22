@@ -42,7 +42,7 @@ class Trip extends Model
         return self::create($data);
     }
 
-    public static function updateRecord($id, $data)
+    public static function updateRecord($data, $id)
     {
         return self::where('id', $id)->update($data);
     }
