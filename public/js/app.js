@@ -119,6 +119,14 @@ function showUpdateModal(link, id) {
     );
 }
 
+function tooglePassword(id) {
+    let input = document.getElementById(id);
+    if (input.type === "password") {
+        input.type = "text";
+    } else {
+        input.type = "password";
+    }
+}
 // ============================ VEHICLES =======================//
 function loadVehicleData(page = 1) {
     $.ajax({
@@ -1336,56 +1344,63 @@ function deleteTrip(id) {
 }
 
 // ============================ END TRIP =======================//
-// ============================ TRACK =======================//
-function mapMaker() {
-    if (mymap != null) {
-        mymap.remove();
-    }
-    mymap = L.map("mapid").setView([latitude, longitude], 20);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap contributors",
-    }).addTo(mymap);
-    L.marker([latitude, longitude]).addTo(mymap);
+
+// ============================ AUTH =======================//
+function login() {
+    let email = $("#email").val();
+    let password = $("#password").val();
     $.ajax({
-        url: `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+        url: "/login",
+        type: "POST",
+        data: {
+            email: email,
+            password: password,
+        },
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            window.location.href = "/";
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.error;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+
+function storeChangePassword() {
+    let form = document.getElementById("changePasswordForm");
+    let formData = new FormData(form);
+    $.ajax({
+        url: "/change-password",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            form.reset();
+            hideFlowBytesModal("change-password-modal");
+            showAlertModal(1, response.message);
+        },
+        error: function (xhr, status, error) {
+            const errors = xhr.responseJSON.errors;
+            showAlertModal(0, errors);
+        },
+    });
+}
+
+// ============================ END AUTH =======================//
+// ============================ TRACK =======================//
+function getTrackForDriver() {
+    $.ajax({
+        url: "/get-track-for-driver",
         type: "GET",
-        success: function (data) {
-            $("#location").val(data.display_name);
-        },
-        error: function (error) {
-            showAlertModal(0, "Failed to get location.");
+        success: function (response) {
+            console.log(response);
         },
     });
-}
-
-function getLocation() {
-    return new Promise((resolve, reject) => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    latitude = position.coords.latitude;
-                    longitude = position.coords.longitude;
-                    resolve();
-                },
-                () => {
-                    showAlertModal(0, "Please allow location access.");
-                    reject();
-                }
-            );
-        } else {
-            showAlertModal(0, "Geolocation is not supported by this browser.");
-            reject();
-        }
-    });
-}
-
-async function startTracking() {
-    await getLocation();
-    if (latitude == null || longitude == null) {
-        showAlertModal(0, "Please allow location access.");
-        return;
-    } else {
-        console.log("Tracking started");
-        mapMaker();
-    }
 }

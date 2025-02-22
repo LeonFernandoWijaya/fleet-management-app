@@ -11,4 +11,6 @@ class TrackController extends Controller
     {
         return view('track.index');
     }
+
+    public function getTrackForDriver() {}
 }
