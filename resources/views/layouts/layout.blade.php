@@ -10,6 +10,7 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="" type="image/x-icon">
     <title>COAL HAULING COMPANY</title>

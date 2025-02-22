@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\SparepartController;
 use App\Http\Controllers\SupplierController;
@@ -86,4 +87,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/vehicles-data-for-report', [VehicleReportController::class, 'getVehicleDataForReport']);
     Route::get('/report-details-data', [VehicleReportController::class, 'getReportDetailsData']);
     Route::post('/mark-as-fixed/{id}', [VehicleReportController::class, 'markAsFixed']);
+
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/get-vehicle-group-by-status', [DashboardController::class, 'getVehicleGroupByStatus']);
+    Route::get('/get-trips-group-by-status', [DashboardController::class, 'getTripsGroupByStatus']);
 });

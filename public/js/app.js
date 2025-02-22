@@ -1763,3 +1763,112 @@ function markAsFixed(id) {
         },
     });
 }
+
+// ============================ END REPORT =======================//
+// ============================ DASHBOARD =======================//
+function refreshDashboard() {
+    getVehicleGroupByStatus();
+    getTripsGroupByStatus();
+}
+
+function getVehicleGroupByStatus() {
+    if (vehicleStatusChart !== null) {
+        vehicleStatusChart.destroy();
+    }
+    $("#vehicle-status-chart").empty();
+    $.ajax({
+        url: "/get-vehicle-group-by-status",
+        type: "GET",
+        success: async function (response) {
+            const names = await response.map((item) => item.name);
+            const totals = await response.map((item) => item.total);
+            const getChartOptions = () => {
+                return {
+                    series: totals,
+                    colors: ["#1C64F2", "#16BDCA", "#9061F9"],
+                    chart: {
+                        height: 260,
+                        width: "100%",
+                        type: "pie",
+                    },
+                    stroke: {
+                        colors: ["white"],
+                        lineCap: "",
+                    },
+                    plotOptions: {
+                        pie: {
+                            size: "100%",
+                            dataLabels: {
+                                offset: 0,
+                            },
+                        },
+                    },
+                    labels: names,
+                    dataLabels: {
+                        enabled: true, // Menampilkan label
+                        formatter: function (val, opts) {
+                            return opts.w.config.series[opts.seriesIndex]; // Menampilkan angka asli
+                        },
+                        style: {
+                            fontFamily: "Inter, sans-serif",
+                            fontSize: "14px",
+                        },
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function (value) {
+                                return value + " unit"; // Menampilkan nilai asli tanpa persen
+                            },
+                        },
+                    },
+                    legend: {
+                        show: true,
+                        position: "bottom",
+                        fontFamily: "Inter, sans-serif",
+                    },
+                    yaxis: {
+                        labels: {
+                            formatter: function (value) {
+                                return value;
+                            },
+                        },
+                    },
+                    xaxis: {
+                        labels: {
+                            formatter: function (value) {
+                                return value;
+                            },
+                        },
+                        axisTicks: {
+                            show: false,
+                        },
+                        axisBorder: {
+                            show: false,
+                        },
+                    },
+                };
+            };
+
+            if (
+                document.getElementById("vehicle-status-chart") &&
+                typeof ApexCharts !== "undefined"
+            ) {
+                vehicleStatusChart = new ApexCharts(
+                    document.getElementById("vehicle-status-chart"),
+                    getChartOptions()
+                );
+                vehicleStatusChart.render();
+            }
+        },
+    });
+}
+
+function getTripsGroupByStatus() {
+    $.ajax({
+        url: "/get-trips-group-by-status",
+        type: "GET",
+        success: function (response) {
+            // console.log(response);
+        },
+    });
+}
