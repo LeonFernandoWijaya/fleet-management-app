@@ -16,6 +16,11 @@ class VehicleReport extends Model
         'user_id',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public static function createRecord($data)
     {
         return self::create($data);

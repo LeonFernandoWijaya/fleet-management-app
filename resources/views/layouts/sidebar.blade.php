@@ -123,7 +123,7 @@
                 </a>
             </li>
             <li>
-                <a href="{{ url('issue-reports') }}"
+                <a href="{{ url('vehicle-reports') }}"
                     class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                         class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white">
@@ -132,7 +132,7 @@
                             clip-rule="evenodd" />
                     </svg>
 
-                    <span class="flex-1 ms-3 whitespace-nowrap">Issue Reports</span>
+                    <span class="flex-1 ms-3 whitespace-nowrap">Vehicle Reports</span>
                 </a>
             </li>
             <li>

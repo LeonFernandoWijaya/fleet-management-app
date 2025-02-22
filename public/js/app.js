@@ -1639,3 +1639,127 @@ function loadTrackHistoryForDriver(page = 1) {
         },
     });
 }
+
+// ============================ END TRACK =======================//
+
+// ============================ REPORT =======================//
+function loadVehicleDataForReport(page = 1) {
+    $.ajax({
+        url: "/vehicles-data-for-report?page=" + page,
+        type: "GET",
+        data: {
+            search: $("#vehicleSearch").val(),
+        },
+        success: function (response) {
+            console.log(response);
+            $("#vehicle-tbody").empty();
+            response.data.forEach((vehicle) => {
+                $("#vehicle-tbody").append(`
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        ${vehicle.plate_number}
+                    </th>
+                    <td class="px-6 py-4">
+                        ${vehicle.vehicle_type.name}
+                    </td>
+                    <td class="px-6 py-4 font-bold ${
+                        vehicle.vehicle_reports_count > 0
+                            ? "text-red-500"
+                            : "text-green-500"
+                    }">
+                        ${vehicle.vehicle_reports_count}
+                    </td>
+                    <td class="px-6 py-4 flex items-center gap-2">
+                        <button class="green-button" type="button" onclick='openMarkAsFixedModal("${
+                            vehicle.id
+                        }")'>Mark as fixed</button>
+                        <button class="blue-button" type="button" onclick='openReportDetailsModal("${
+                            vehicle.id
+                        }")'>Check</button>
+                    </td>
+                </tr>
+                `);
+            });
+            buttonPagination(
+                "#vehicle-pagination",
+                response.last_page,
+                response.current_page,
+                "loadVehicleDataForReport"
+            );
+        },
+    });
+}
+
+function openReportDetailsModal(id) {
+    showFlowBytesModal("report-details-modal");
+    $("#report-details-vehicle-id").val(id);
+    loadReportDetails();
+}
+
+function loadReportDetails(page = 1) {
+    $.ajax({
+        url: "/report-details-data?page=" + page,
+        type: "GET",
+        data: {
+            vehicle_id: $("#report-details-vehicle-id").val(),
+        },
+        success: function (response) {
+            $("#report-details-tbody").empty();
+            response.data.forEach((report) => {
+                $("#report-details-tbody").append(`
+                    <div
+                        class="p-2 rounded-xl border border-gray-300 dark:border-gray-700">
+                        <div class="grid grid-cols-2 justify-between gap-2 text-xs text-gray-900 dark:text-white">
+                            <div>
+                                Issued : ${report.created_at.split("T")[0]} ${
+                    report.is_fixed == 1
+                        ? "<span class='text-green-500 font-bold'>(Fixed)</span>"
+                        : "<span class='text-red-500 font-bold'>(Not Fixed)</span>"
+                }
+                            </div>
+                             <div class="text-end">
+                                Report by : ${report.user.name}
+                            </div>
+                            <div class="col-span-2">
+                                Description : ${report.description}
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+            buttonPagination(
+                "#report-details-pagination",
+                response.last_page,
+                response.current_page,
+                "loadReportDetails"
+            );
+        },
+    });
+}
+
+function openMarkAsFixedModal(id) {
+    showFlowBytesModal("mark-fixed-confirmation-modal");
+    $("#mark-fixed-confirmation-submit-button").attr(
+        "onclick",
+        "markAsFixed(" + id + ")"
+    );
+}
+
+function markAsFixed(id) {
+    $.ajax({
+        url: "/mark-as-fixed/" + id,
+        type: "POST",
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("mark-fixed-confirmation-modal");
+            showAlertModal(1, response.message);
+            loadVehicleDataForReport();
+        },
+        error: function (xhr, status, error) {
+            const errors = xhr.responseJSON.errors;
+            showAlertModal(0, errors);
+        },
+    });
+}

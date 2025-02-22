@@ -9,6 +9,7 @@ use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VehicleDocumentController;
+use App\Http\Controllers\VehicleReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => ['guest']], function () {
@@ -80,4 +81,9 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('/start-tracking-for-driver/{id}', [TrackController::class, 'startTrackingForDriver']);
     Route::post('/finish-tracking-for-driver/{id}', [TrackController::class, 'finishTrackingForDriver']);
     Route::get('/track-history-for-driver', [TrackController::class, 'trackHistoryForDriver']);
+
+    Route::get('/vehicle-reports', [VehicleReportController::class, 'index']);
+    Route::get('/vehicles-data-for-report', [VehicleReportController::class, 'getVehicleDataForReport']);
+    Route::get('/report-details-data', [VehicleReportController::class, 'getReportDetailsData']);
+    Route::post('/mark-as-fixed/{id}', [VehicleReportController::class, 'markAsFixed']);
 });
