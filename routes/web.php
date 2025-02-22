@@ -4,13 +4,14 @@ use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\SparepartController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TrackController;
+use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VehicleDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/vehicles');
 });
 
 Route::get('/vehicles', [VehicleController::class, 'index']);
@@ -53,5 +54,13 @@ Route::post('/users', [UserController::class, 'store']);
 Route::get('/users-data', [UserController::class, 'getUsersData']);
 Route::post('/users/{id}', [UserController::class, 'update']);
 Route::delete('/users/{id}', [UserController::class, 'destroy']);
+
+Route::get('/trips', [TripController::class, 'index']);
+Route::post('/trips', [TripController::class, 'store']);
+Route::get('/trips-data', [TripController::class, 'getTripsData']);
+Route::post('/trips/{id}', [TripController::class, 'update']);
+Route::delete('/trips/{id}', [TripController::class, 'destroy']);
+Route::get('/drivers-for-dropdown', [TripController::class, 'getDriverData']);
+Route::get('/vehicles-for-dropdown', [TripController::class, 'getVehicleData']);
 
 Route::get('/track', [TrackController::class, 'index']);

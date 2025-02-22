@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             VehicleTypeSeeder::class,
             VehicleStatusSeeder::class,
             RoleSeeder::class,
+            TripStatusSeeder::class,
         ]);
     }
 }

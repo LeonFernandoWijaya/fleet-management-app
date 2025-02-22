@@ -1123,6 +1123,219 @@ function deleteUser(id) {
 
 // ================= END USER =======================//
 
+// ============================ TRIP =======================//
+function loadTripData(page = 1) {
+    $.ajax({
+        url: "/trips-data?page=" + page,
+        type: "GET",
+        data: {
+            search: $("#vehicleSearch").val(),
+            filter: $('input[name="tripStatusFilter"]:checked').val(),
+        },
+        success: function (response) {
+            console.log(response);
+            $("#trip-tbody").empty();
+            response.data.forEach((trip) => {
+                $("#trip-tbody").append(`
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        ${trip.vehicle.plate_number}
+                    </th>
+                    <td class="px-6 py-4">
+                        ${trip.user.name}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div>
+                            ${trip.departure_time}
+                        </div>
+                        <div>
+                            ${trip.arrival_time}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div>
+                            ${trip.actual_departure_time ?? "Not Started"}
+                        </div>
+                        <div>
+                            ${trip.actual_arrival_time ?? "Not Finished"}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 ${
+                        trip.trip_status.id == 3 ? "text-red-500" : ""
+                    }">
+                        ${trip.trip_status.name}
+                    </td>
+                    <td class="px-6 py-4 flex items-center gap-2">
+                        <button class="blue-button" onclick="openEditTripModal('${
+                            trip.id
+                        }', '${trip.user_id}', '${trip.vehicle_id}', '${
+                    trip.departure_time
+                }', '${trip.arrival_time}', '${trip.departure_location}', '${
+                    trip.arrival_location
+                }')" type="button">Edit</button>
+                        <button class="red-button" onclick="showDeleteModal('deleteTrip', '${
+                            trip.id
+                        }')" type="button">Delete</button>
+                    </td>
+                </tr>
+                `);
+            });
+            buttonPagination(
+                "#trip-pagination",
+                response.last_page,
+                response.current_page,
+                "loadTripData"
+            );
+        },
+    });
+}
+
+function loadDriverDataForTrip(value = null) {
+    $.ajax({
+        url: "/drivers-for-dropdown",
+        type: "GET",
+        data: {
+            value: value,
+        },
+        success: async function (response) {
+            $("#trip-driver").empty();
+            await response.forEach((driver) => {
+                $("#trip-driver").append(`
+                <option value="${driver.id}">${driver.id} - ${driver.name}</option>
+                `);
+            });
+            $("#trip-driver").select2({
+                placeholder: "Select Driver",
+                theme: "classic",
+                width: "100%",
+            });
+            var firstValue =
+                (await value) ?? (await $("#trip-driver option:first").val());
+            await $("#trip-driver").val(firstValue).trigger("change");
+        },
+    });
+}
+
+function loadVehicleDataForTrip(value = null) {
+    $.ajax({
+        url: "/vehicles-for-dropdown",
+        type: "GET",
+        data: {
+            value: value,
+        },
+        success: async function (response) {
+            $("#trip-vehicle").empty();
+            await response.forEach((vehicle) => {
+                $("#trip-vehicle").append(`
+                <option value="${vehicle.id}">${vehicle.plate_number} - ${vehicle.vehicle_type.name}</option>
+                `);
+            });
+            $("#trip-vehicle").select2({
+                placeholder: "Select Vehicle",
+                theme: "classic",
+                width: "100%",
+            });
+            var firstValue =
+                (await value) ?? (await $("#trip-vehicle option:first").val());
+            await "#trip-vehicle".val(firstValue).trigger("change");
+        },
+    });
+}
+
+function openCreateTripModal() {
+    loadDriverDataForTrip();
+    loadVehicleDataForTrip();
+    $("#trip-form-data")[0].reset();
+    $("#trip-form-title").text("Create New Trip");
+    showFlowBytesModal("trip-form-modal");
+    $("#trip-form-submit").attr("onclick", "storeTrip()");
+}
+
+function storeTrip() {
+    let formData = new FormData(document.getElementById("trip-form-data"));
+    $.ajax({
+        url: "/trips",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("trip-form-modal");
+            showAlertModal(1, response.message);
+            loadTripData();
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+
+function openEditTripModal(
+    id,
+    driver,
+    vehicle,
+    departureTime,
+    arrivalTime,
+    departureLocation,
+    arrivalLocation
+) {
+    loadDriverDataForTrip(driver);
+    loadVehicleDataForTrip(vehicle);
+    $("#trip-form-title").text("Edit Trip");
+    $("#trip-departure-time").val(departureTime);
+    $("#trip-arrival-time").val(arrivalTime);
+    $("#trip-departure-location").val(departureLocation);
+    $("#trip-arrival-location").val(arrivalLocation);
+    showFlowBytesModal("trip-form-modal");
+    $("#trip-form-submit").attr("onclick", "updateTrip(" + id + ")");
+}
+
+function updateTrip(id) {
+    let formData = new FormData(document.getElementById("trip-form-data"));
+    $.ajax({
+        url: "/trips/" + id,
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            hideFlowBytesModal("trip-form-modal");
+            showAlertModal(1, response.message);
+            loadTripData();
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+
+function deleteTrip(id) {
+    $.ajax({
+        url: "/trips/" + id,
+        type: "DELETE",
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        success: function (response) {
+            showAlertModal(1, response.message);
+            loadTripData();
+        },
+        error: function (xhr, status, error) {
+            const firstErrorMessage = xhr.responseJSON.errors;
+            showAlertModal(0, firstErrorMessage);
+        },
+    });
+}
+
+// ============================ END TRIP =======================//
 // ============================ TRACK =======================//
 function mapMaker() {
     if (mymap != null) {
