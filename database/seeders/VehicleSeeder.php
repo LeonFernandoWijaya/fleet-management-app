@@ -15,7 +15,7 @@ class VehicleSeeder extends Seeder
     public function run(): void
     {
         //
-        for ($i = 0; $i < 30; $i++) {
+        for ($i = 0; $i < 100; $i++) {
             $random2letter = chr(rand(65, 90)) . chr(rand(65, 90));
             $random4digit = rand(1000, 9999);
             $random2letter2 = chr(rand(65, 90)) . chr(rand(65, 90));
@@ -26,7 +26,7 @@ class VehicleSeeder extends Seeder
                 'brand' => Factory::create()->company,
                 'model' => Factory::create()->word,
                 'capacity_ton' => rand(60, 100),
-                'reservice_level' => rand(60, 200),
+                'reservice_level' => rand(60, 180),
             ]);
         }
     }

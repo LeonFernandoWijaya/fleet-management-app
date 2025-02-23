@@ -14,13 +14,29 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create a super admin user
+        User::create([
+            'name' => 'Super Admin',
+            'email' => 'admin@admin.com',
+            'password' => bcrypt('password'),
+            'role_id' => 1,
+        ]);
         //
-        for ($i = 0; $i < 20; $i++) {
+        for ($i = 0; $i < 30; $i++) {
             User::create([
                 'name' => Factory::create()->name,
                 'email' => Factory::create()->email,
                 'password' => bcrypt('password'),
                 'role_id' => 4,
+            ]);
+        }
+
+        for ($i = 0; $i < 5; $i++) {
+            User::create([
+                'name' => Factory::create()->name,
+                'email' => Factory::create()->email,
+                'password' => bcrypt('password'),
+                'role_id' => rand(2, 3),
             ]);
         }
     }

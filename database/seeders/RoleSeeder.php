@@ -15,19 +15,19 @@ class RoleSeeder extends Seeder
     {
         //
         Role::create([
-            'name' => 'super admin',
+            'name' => 'Super Admin',
         ]);
 
         Role::create([
-            'name' => 'admin',
+            'name' => 'Admin',
         ]);
 
         Role::create([
-            'name' => 'mechanic',
+            'name' => 'Mechanic',
         ]);
 
         Role::create([
-            'name' => 'driver',
+            'name' => 'Driver',
         ]);
     }
 }
