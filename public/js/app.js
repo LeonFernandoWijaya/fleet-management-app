@@ -1224,6 +1224,9 @@ function loadTripData(page = 1) {
                     <td class="px-6 py-4 flex items-center gap-2">
                         ${editButton}
                         ${deleteButton}
+                        <button class="dark-button" type="button" onclick="openLiveModal('${
+                            trip.id
+                        }')">Live</button
                     </td>
                 </tr>
                 `);
@@ -1236,6 +1239,36 @@ function loadTripData(page = 1) {
             );
         },
     });
+}
+
+function loadLiveLocation(id) {
+    $.ajax({
+        url: "/live-location/" + id,
+        type: "GET",
+        success: function (response) {
+            if (
+                response.latest_latitude == null ||
+                response.latest_longitude == null
+            ) {
+                mapMaker(0, 0);
+            } else {
+                mapMaker(response.latest_latitude, response.latest_longitude);
+            }
+        },
+    });
+}
+
+function openLiveModal(id) {
+    showFlowBytesModal("live-modal");
+    loadLiveLocation(id);
+    liveLocationInterval = setInterval(() => {
+        loadLiveLocation(id);
+    }, 3000);
+}
+
+function closeLiveModal(id) {
+    hideFlowBytesModal(id);
+    clearInterval(liveLocationInterval);
 }
 
 function loadDriverDataForTrip(value = null) {
@@ -1459,15 +1492,6 @@ function getTrackForDriver() {
                     <div class="flex flex-col gap-4 text-sm font-medium">
                         <div>
                             Plate number : ${response.vehicle.plate_number} (${response.vehicle.vehicle_type.name})
-                        </div>
-                        <div>
-                            Driver : ${response.user.name}
-                        </div>
-                        <div>
-                            Scheduled Time : ${response.departure_time} - ${response.arrival_time}
-                        </div>
-                        <div>
-                            Location : ${response.departure_location} to ${response.arrival_location}
                         </div>
                     </div>
                     <div class="w-full flex items-center justify-center" id="changeStatusButton">
@@ -2345,4 +2369,15 @@ function updateLocation(id) {
             },
         });
     });
+}
+
+function mapMaker(latitude, longitude) {
+    if (mymap != null) {
+        mymap.remove();
+    }
+    mymap = L.map("mapid").setView([latitude, longitude], 20);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+    }).addTo(mymap);
+    L.marker([latitude, longitude]).addTo(mymap);
 }

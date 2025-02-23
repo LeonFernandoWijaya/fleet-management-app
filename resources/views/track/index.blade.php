@@ -32,7 +32,8 @@
                 History
             </button>
         </div>
-        <div class="px-4 pt-4 pb-14 rounded-lg shadow-md border border-gray-300 dark:border-gray-700 space-y-14 bg-gray-50 dark:bg-gray-800"
+        <div id="mapid" class="w-full h-64 rounded-2xl"></div>
+        <div class="px-4 pt-4 pb-14 rounded-lg shadow-md border border-gray-300 dark:border-gray-700 space-y-4 bg-gray-50 dark:bg-gray-800"
             id="track-tbody">
 
         </div>
@@ -44,15 +45,21 @@
     @include('track.track-confirmation')
     @include('track.history')
     <script>
-        let latitude = null;
-        let longitude = null;
+        let latitude = 0;
+        let longitude = 0;
         let statusForAutoUpdate = null;
         let latestTripId = null;
+        let mymap = null;
         $(document).ready(async function() {
             getTrackForDriver();
+            getLocation();
+            mapMaker(latitude, longitude);
+
         });
         setInterval(() => {
-            getLocation();
+            getLocation().then(() => {
+                mapMaker(latitude, longitude);
+            });
             if (statusForAutoUpdate == 2 || statusForAutoUpdate == 3) {
                 updateLocation(latestTripId);
             }

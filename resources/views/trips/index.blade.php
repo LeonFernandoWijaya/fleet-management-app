@@ -70,8 +70,11 @@
     </div>
 
     @include('trips.form')
+    @include('trips.live')
     @include('alerts.confirmation-delete')
     <script>
+        let mymap = null;
+        let liveLocationInterval;
         $(document).ready(function() {
             loadTripData();
         });

@@ -227,4 +227,13 @@ class TripController extends Controller
             return response()->json(['errors' => "Something went wrong"], 422);
         }
     }
+
+    public function getLiveLocation($id)
+    {
+        if (!Gate::allows('moduleAction', ['Trip', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
+        $trip = Trip::select('latest_longitude', 'latest_latitude')->find($id);
+        return response()->json($trip);
+    }
 }

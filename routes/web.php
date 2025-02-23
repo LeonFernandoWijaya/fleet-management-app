@@ -75,6 +75,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::delete('/trips/{id}', [TripController::class, 'destroy']);
     Route::get('/drivers-for-dropdown', [TripController::class, 'getDriverData']);
     Route::get('/vehicles-for-dropdown', [TripController::class, 'getVehicleData']);
+    Route::get('/live-location/{id}', [TripController::class, 'getLiveLocation']);
 
     Route::get('/track', [TrackController::class, 'index']);
     Route::get('/get-track-for-driver', [TrackController::class, 'getTrackForDriver']);

@@ -12,6 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="{{ url('truck.png') }}" type="image/x-icon">
     <title>COAL HAULING COMPANY</title>
