@@ -1285,7 +1285,7 @@ function loadVehicleDataForTrip(value = null) {
             });
             var firstValue =
                 (await value) ?? (await $("#trip-vehicle option:first").val());
-            await "#trip-vehicle".val(firstValue).trigger("change");
+            await $("#trip-vehicle").val(firstValue).trigger("change");
         },
     });
 }
@@ -1441,6 +1441,8 @@ function getTrackForDriver() {
         url: "/get-track-for-driver",
         type: "GET",
         success: function (response) {
+            statusForAutoUpdate = response.trip_status_id;
+            latestTripId = response.id;
             $("#track-refresh-icon").removeClass("animate-spin");
             $("#track-tbody").empty();
             if (
@@ -1601,41 +1603,71 @@ function openTrackConfirmationModal(id, status) {
 }
 
 function startTrackingForDriver(id) {
-    $.ajax({
-        url: "/start-tracking-for-driver/" + id,
-        type: "POST",
-        headers: {
-            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-        },
-        success: function (response) {
-            getTrackForDriver();
-            hideFlowBytesModal("track-confirmation-modal");
-            showAlertModal(1, response.message);
-        },
-        error: function (xhr, status, error) {
-            const errors = xhr.responseJSON.errors;
-            showAlertModal(0, errors);
-        },
-    });
+    getLocation()
+        .then(() => {
+            $.ajax({
+                url: "/start-tracking-for-driver/" + id,
+                type: "POST",
+                data: {
+                    latitude: latitude,
+                    longitude: longitude,
+                },
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                        "content"
+                    ),
+                },
+                success: function (response) {
+                    getTrackForDriver();
+                    hideFlowBytesModal("track-confirmation-modal");
+                    showAlertModal(1, response.message);
+                },
+                error: function (xhr, status, error) {
+                    const errors = xhr.responseJSON.errors;
+                    showAlertModal(0, errors);
+                },
+            });
+        })
+        .catch(() => {
+            showAlertModal(
+                0,
+                "Failed to get location. Please enable location services and try again."
+            );
+        });
 }
 
 function finishTrackingForDriver(id) {
-    $.ajax({
-        url: "/finish-tracking-for-driver/" + id,
-        type: "POST",
-        headers: {
-            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-        },
-        success: function (response) {
-            getTrackForDriver();
-            hideFlowBytesModal("track-confirmation-modal");
-            showAlertModal(1, response.message);
-        },
-        error: function (xhr, status, error) {
-            const errors = xhr.responseJSON.errors;
-            showAlertModal(0, errors);
-        },
-    });
+    getLocation()
+        .then(() => {
+            $.ajax({
+                url: "/finish-tracking-for-driver/" + id,
+                type: "POST",
+                data: {
+                    latitude: latitude,
+                    longitude: longitude,
+                },
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                        "content"
+                    ),
+                },
+                success: function (response) {
+                    getTrackForDriver();
+                    hideFlowBytesModal("track-confirmation-modal");
+                    showAlertModal(1, response.message);
+                },
+                error: function (xhr, status, error) {
+                    const errors = xhr.responseJSON.errors;
+                    showAlertModal(0, errors);
+                },
+            });
+        })
+        .catch(() => {
+            showAlertModal(
+                0,
+                "Failed to get location. Please enable location services and try again."
+            );
+        });
 }
 
 function openTrackHistoryForDriver() {
@@ -2257,5 +2289,60 @@ function loadRoleData(page = 1) {
             const firstErrorMessage = xhr.responseJSON.errors;
             showAlertModal(0, firstErrorMessage);
         },
+    });
+}
+
+//  ============================ END ROLE =======================//
+
+// ============================ LOCATION =======================//
+function getLocation() {
+    return new Promise((resolve, reject) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    latitude = position.coords.latitude;
+                    longitude = position.coords.longitude;
+                    resolve();
+                    $("#location-permission-icon").removeClass(
+                        "stroke-red-500"
+                    );
+                    $("#location-permission-icon").addClass("stroke-green-500");
+                },
+                () => {
+                    reject();
+                    $("#location-permission-icon").addClass("stroke-red-500");
+                    $("#location-permission-icon").removeClass(
+                        "stroke-green-500"
+                    );
+                }
+            );
+        } else {
+            reject();
+            $("#location-permission-icon").addClass("stroke-red-500");
+            $("#location-permission-icon").removeClass("stroke-green-500");
+        }
+    });
+}
+
+function updateLocation(id) {
+    getLocation().then(() => {
+        $.ajax({
+            url: "/update-location/" + id,
+            type: "POST",
+            data: {
+                latitude: latitude,
+                longitude: longitude,
+            },
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+                // showAlertModal(1, response.message);
+            },
+            error: function (xhr, status, error) {
+                // const errors = xhr.responseJSON.errors;
+                // showAlertModal(0, errors);
+            },
+        });
     });
 }

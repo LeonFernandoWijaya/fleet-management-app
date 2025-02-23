@@ -13,23 +13,23 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="icon" href="" type="image/x-icon">
+    <link rel="icon" href="{{ url('truck.png') }}" type="image/x-icon">
     <title>COAL HAULING COMPANY</title>
 
 </head>
 
 <body class="font-sans">
     @auth
-    @include('layouts.sidebar')
+        @include('layouts.sidebar')
 
-    <div class="p-4 sm:ml-64">
-        <div class="mt-14">
+        <div class="p-4 sm:ml-64">
+            <div class="mt-14">
             @endauth
             @yield('content')
             @auth
+            </div>
         </div>
-    </div>
-    @include('change-password.form')
+        @include('change-password.form')
     @endauth
 
     @include('alerts.alert')

@@ -96,7 +96,7 @@ class TrackController extends Controller
         }
     }
 
-    public function startTrackingForDriver($id)
+    public function startTrackingForDriver(Request $request, $id)
     {
         if (!Gate::allows('moduleAction', ['Track', 'Create'])) {
             return response()->json(['errors' => 'Unauthorized'], 403);
@@ -109,6 +109,10 @@ class TrackController extends Controller
         $data = [
             'trip_status_id' => 2,
             'actual_departure_time' => now(),
+            'departure_latitude' => $request->input('latitude'),
+            'departure_longitude' => $request->input('longitude'),
+            'latest_latitude' => $request->input('latitude'),
+            'latest_longitude' => $request->input('longitude'),
         ];
 
         try {
@@ -119,7 +123,7 @@ class TrackController extends Controller
         }
     }
 
-    public function finishTrackingForDriver($id)
+    public function finishTrackingForDriver(Request $request, $id)
     {
         if (!Gate::allows('moduleAction', ['Track', 'Create'])) {
             return response()->json(['errors' => 'Unauthorized'], 403);
@@ -132,6 +136,10 @@ class TrackController extends Controller
         $data = [
             'trip_status_id' => 4,
             'actual_arrival_time' => now(),
+            'arrival_latitude' => $request->input('latitude'),
+            'arrival_longitude' => $request->input('longitude'),
+            'latest_latitude' => $request->input('latitude'),
+            'latest_longitude' => $request->input('longitude'),
         ];
 
         DB::beginTransaction();
@@ -156,5 +164,37 @@ class TrackController extends Controller
         $findTrips = Trip::with('vehicle', 'vehicle.vehicleType', 'tripStatus')->where('user_id', $authId)->orderBy('created_at', 'desc')->paginate(5);
 
         return response()->json($findTrips);
+    }
+
+    public function updateLocation(Request $request, $id)
+    {
+        if (!Gate::allows('moduleAction', ['Track', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
+        $validator = Validator::make($request->all(), [
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()->first()], 422);
+        }
+
+        $findTrip = Trip::where('user_id', auth()->user()->id)->find($id);
+        if (!$findTrip || $findTrip->trip_status_id == 4 || $findTrip->trip_status_id == 1) {
+            return response()->json(['errors' => 'Something went wrong'], 404);
+        }
+
+        $data = [
+            'latest_latitude' => $request->input('latitude'),
+            'latest_longitude' => $request->input('longitude'),
+        ];
+
+        try {
+            Trip::updateRecord($data, $id);
+            return response()->json(['message' => 'Location updated successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['errors' => 'Failed to update location'], 500);
+        }
     }
 }
