@@ -23,8 +23,10 @@
             <!-- Modal body -->
             <div class="p-4 md:p-5 flex flex-col gap-4">
                 <div class="flex justify-end">
-                    <button class="blue-button" type="button" onclick="openCreateDocumentModal()">Create
-                        document</button>
+                    @moduleAction('Document', 'Create')
+                        <button class="blue-button" type="button" onclick="openCreateDocumentModal()">Create
+                            document</button>
+                    @endmoduleAction
                 </div>
                 <input type="hidden" id="document-id">
                 <div id="document-tbody" class="flex flex-col gap-3">

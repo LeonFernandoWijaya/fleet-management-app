@@ -7,7 +7,9 @@
             <input type="text" onchange="loadSparepartData()" name="sparepartSearch" id="sparepartSearch"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                 placeholder="Type spare part name" required="">
-            <button type="button" class="blue-button" onclick="openCreateSparepartModal()">Create new spare part</button>
+            @moduleAction('Sparepart', 'Create')
+                <button type="button" class="blue-button" onclick="openCreateSparepartModal()">Create new spare part</button>
+            @endmoduleAction
         </div>
 
         <div class="relative overflow-x-auto">

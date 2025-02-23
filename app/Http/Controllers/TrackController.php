@@ -8,6 +8,7 @@ use App\Models\Vehicle;
 use App\Models\VehicleReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 
 class TrackController extends Controller
@@ -15,11 +16,17 @@ class TrackController extends Controller
     //
     public function index()
     {
+        if (!Gate::allows('moduleAction', ['Track', 'Read'])) {
+            abort(403);
+        }
         return view('track.index');
     }
 
     public function getTrackForDriver()
     {
+        if (!Gate::allows('moduleAction', ['Track', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $authId = auth()->user()->id;
         $findTrip = Trip::with('user', 'vehicle', 'vehicle.vehicleType')->where('user_id', $authId)->latest()->first();
 
@@ -28,6 +35,9 @@ class TrackController extends Controller
 
     public function reportVehicleForDriver(Request $request, $id)
     {
+        if (!Gate::allows('moduleAction', ['Track', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'vehicle-report-description' => 'required|string|max:255',
         ]);
@@ -57,6 +67,9 @@ class TrackController extends Controller
 
     public function reportTripForDriver(Request $request, $id)
     {
+        if (!Gate::allows('moduleAction', ['Track', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'trip-report-description' => 'required|string|max:255',
         ]);
@@ -85,6 +98,9 @@ class TrackController extends Controller
 
     public function startTrackingForDriver($id)
     {
+        if (!Gate::allows('moduleAction', ['Track', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $findTrip = Trip::where('user_id', auth()->user()->id)->find($id);
         if (!$findTrip || $findTrip->trip_status_id == 4 || $findTrip->trip_status_id == 3 || $findTrip->trip_status_id == 2) {
             return response()->json(['errors' => 'Something went wrong'], 404);
@@ -105,6 +121,9 @@ class TrackController extends Controller
 
     public function finishTrackingForDriver($id)
     {
+        if (!Gate::allows('moduleAction', ['Track', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $findTrip = Trip::where('user_id', auth()->user()->id)->find($id);
         if (!$findTrip || $findTrip->trip_status_id == 4 || $findTrip->trip_status_id == 1) {
             return response()->json(['errors' => 'Something went wrong'], 404);
@@ -130,6 +149,9 @@ class TrackController extends Controller
 
     public function trackHistoryForDriver()
     {
+        if (!Gate::allows('moduleAction', ['Track', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $authId = auth()->user()->id;
         $findTrips = Trip::with('vehicle', 'vehicle.vehicleType', 'tripStatus')->where('user_id', $authId)->orderBy('created_at', 'desc')->paginate(5);
 

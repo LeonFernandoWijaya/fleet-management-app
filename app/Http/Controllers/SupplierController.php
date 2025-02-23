@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 
 class SupplierController extends Controller
@@ -11,21 +12,33 @@ class SupplierController extends Controller
     //
     public function index()
     {
+        if (!Gate::allows('moduleAction', ['Supplier', 'Read'])) {
+            abort(403);
+        }
         return view('suppliers.index');
     }
 
     public function getSupplierData(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Supplier', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $search = $request->input('search');
         $suppliers = Supplier::when($search, function ($query) use ($search) {
             $query->where('name', 'like', "%$search%");
         })
             ->paginate(10);
-        return response()->json($suppliers);
+
+        $canUpdate = Gate::allows('moduleAction', ['Supplier', 'Update']);
+        $canDelete = Gate::allows('moduleAction', ['Supplier', 'Delete']);
+        return response()->json(compact('suppliers', 'canUpdate', 'canDelete'));
     }
 
     public function store(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Supplier', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'supplier-name' => 'required|string|max:255',
             'supplier-address' => 'required|string|max:255',
@@ -59,6 +72,9 @@ class SupplierController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!Gate::allows('moduleAction', ['Supplier', 'Update'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'supplier-name' => 'required|string|max:255',
             'supplier-address' => 'required|string|max:255',
@@ -92,6 +108,9 @@ class SupplierController extends Controller
 
     public function destroy($id)
     {
+        if (!Gate::allows('moduleAction', ['Supplier', 'Delete'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         try {
             Supplier::where('id', $id)->delete();
         } catch (\Exception $e) {

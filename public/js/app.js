@@ -158,7 +158,13 @@ function loadVehicleData(page = 1) {
         },
         success: function (response) {
             $("#vehicle-tbody").empty();
-            response.data.forEach((vehicle) => {
+            response.vehicles.data.forEach((vehicle) => {
+                let editButton = response.canUpdate
+                    ? `<button class="blue-button" type="button" onclick='openEditVehicleModal("${vehicle.id}", "${vehicle.vehicle_type_id}", "${vehicle.plate_number}", "${vehicle.brand}", "${vehicle.model}", "${vehicle.capacity_ton}", "${vehicle.vehicle_status_id}", "${vehicle.reservice_level}")'>Edit</button>`
+                    : "";
+                let deleteButton = response.canDelete
+                    ? ` <button class="red-button" type="button" onclick="showDeleteModal('deleteVehicle', '${vehicle.id}')">Delete</button>`
+                    : "";
                 $("#vehicle-tbody").append(`
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -177,16 +183,16 @@ function loadVehicleData(page = 1) {
                         ${vehicle.vehicle_status.name}
                     </td>
                     <td class="px-6 py-4 flex items-center gap-2">
-                        <button class="blue-button" type="button" onclick='openEditVehicleModal("${vehicle.id}", "${vehicle.vehicle_type_id}", "${vehicle.plate_number}", "${vehicle.brand}", "${vehicle.model}", "${vehicle.capacity_ton}", "${vehicle.vehicle_status_id}", "${vehicle.reservice_level}")'>Edit</button>
-                        <button class="red-button" type="button" onclick="showDeleteModal('deleteVehicle', '${vehicle.id}')">Delete</button>
+                        ${editButton}
+                        ${deleteButton}
                     </td>
                 </tr>
                 `);
             });
             buttonPagination(
                 "#vehicle-pagination",
-                response.last_page,
-                response.current_page,
+                response.vehicles.last_page,
+                response.vehicles.current_page,
                 "loadVehicleData"
             );
         },
@@ -294,7 +300,7 @@ function deleteVehicle(id) {
 // ============================ MAINTENANCE =======================//
 function loadVehicleDataForMaintenance(page = 1) {
     $.ajax({
-        url: "/vehicles-data-for-maintenance/",
+        url: "/vehicles-data-for-maintenance/?page=" + page,
         type: "GET",
         data: {
             search: $("#vehicleSearch").val(),
@@ -302,18 +308,21 @@ function loadVehicleDataForMaintenance(page = 1) {
         },
         success: function (response) {
             $("#vehicle-tbody").empty();
-            response.data.forEach((vehicle) => {
+            response.vehicles.data.forEach((vehicle) => {
                 let vehicleDue =
                     vehicle.needs_service == 1
                         ? "<span class='text-red-500 font-bold'>Due</span>"
                         : "";
                 let vehiclestatus = vehicle.vehicle_status.name;
-                let actionButton =
-                    "<button class='dark-button opacity-50 cursor-not-allowed' disabled>In use</button>";
-                if (vehiclestatus == "Available") {
-                    actionButton = `<button class="green-button" onclick="showUpdateModal('changeVehicleStatus', '${vehicle.id}')">Set on service</button>`;
-                } else if (vehiclestatus == "On Service") {
-                    actionButton = `<button class="blue-button" onclick="showUpdateModal('changeVehicleStatus', '${vehicle.id}')">Set available</button>`;
+                let actionButton = "";
+                if (response.canUpdate) {
+                    actionButton =
+                        "<button class='dark-button opacity-50 cursor-not-allowed' disabled>In use</button>";
+                    if (vehiclestatus == "Available") {
+                        actionButton = `<button class="green-button" onclick="showUpdateModal('changeVehicleStatus', '${vehicle.id}')">Set on service</button>`;
+                    } else if (vehiclestatus == "On Service") {
+                        actionButton = `<button class="blue-button" onclick="showUpdateModal('changeVehicleStatus', '${vehicle.id}')">Set available</button>`;
+                    }
                 }
 
                 $("#vehicle-tbody").append(`
@@ -351,9 +360,9 @@ function loadVehicleDataForMaintenance(page = 1) {
             });
             buttonPagination(
                 "#vehicle-pagination",
-                response.last_page,
-                response.current_page,
-                "loadVehicleData"
+                response.vehicles.last_page,
+                response.vehicles.current_page,
+                "loadVehicleDataForMaintenance"
             );
         },
     });
@@ -392,7 +401,21 @@ function loadMaintenanceData(page = 1) {
         },
         success: function (response) {
             $("#history-tbody").empty();
-            response.data.forEach((maintenance) => {
+            response.vehicleMaintenance.data.forEach((maintenance) => {
+                let canUpdate = response.canUpdate
+                    ? `<button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" onclick="openEditMaintenanceModal('${maintenance.id}', '${maintenance.date}', '${maintenance.details}', '${maintenance.cost}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
+                            </button>`
+                    : "";
+                let canDelete = response.canDelete
+                    ? ` <button class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-2.5 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900" onclick="showDeleteModal('deleteMaintenance', '${maintenance.id}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                            </button>`
+                    : "";
                 $("#history-tbody").append(`
                 <div class="flex items-center justify-between gap-4 p-2 rounded-xl border border-gray-300 dark:border-gray-700">
                     <div class="flex flex-col gap-2 text-xs text-gray-900 dark:text-white">
@@ -408,16 +431,8 @@ function loadMaintenanceData(page = 1) {
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" onclick="openEditMaintenanceModal('${maintenance.id}', '${maintenance.date}', '${maintenance.details}', '${maintenance.cost}')">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                </svg>
-                            </button>
-                            <button class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-2.5 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900" onclick="showDeleteModal('deleteMaintenance', '${maintenance.id}')">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                </svg>
-                            </button>
+                            ${canUpdate}
+                            ${canDelete}
                         </div>
                     </div>
                 </div>
@@ -425,8 +440,8 @@ function loadMaintenanceData(page = 1) {
             });
             buttonPagination(
                 "#history-pagination",
-                response.last_page,
-                response.current_page,
+                response.vehicleMaintenance.last_page,
+                response.vehicleMaintenance.current_page,
                 "loadMaintenanceData"
             );
         },
@@ -590,7 +605,13 @@ function loadSparepartData(page = 1) {
         },
         success: function (response) {
             $("#sparepart-tbody").empty();
-            response.data.forEach((sparepart) => {
+            response.spareparts.data.forEach((sparepart) => {
+                let updateButton = response.canUpdate
+                    ? ` <button class="blue-button" type="button" onclick='openEditSparepartModal("${sparepart.id}", "${sparepart.name}", "${sparepart.stock}", "${sparepart.reorder_level}", "${sparepart.supplier_id}")'>Edit</button>`
+                    : "";
+                let deleteButton = response.canDelete
+                    ? `<button class="red-button" type="button" onclick="showDeleteModal('deleteSparepart', '${sparepart.id}')">Delete</button>`
+                    : "";
                 $("#sparepart-tbody").append(`
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                     <td class="px-2 py-4">
@@ -615,22 +636,16 @@ function loadSparepartData(page = 1) {
                 }
                     </td>
                     <td class="px-6 py-4 flex items-center gap-2">
-                        <button class="blue-button" type="button" onclick='openEditSparepartModal("${
-                            sparepart.id
-                        }", "${sparepart.name}", "${sparepart.stock}", "${
-                    sparepart.reorder_level
-                }", "${sparepart.supplier_id}")'>Edit</button>
-                        <button class="red-button" type="button" onclick="showDeleteModal('deleteSparepart', '${
-                            sparepart.id
-                        }')">Delete</button>
+                        ${updateButton}
+                        ${deleteButton}
                     </td>
                 </tr>
                 `);
             });
             buttonPagination(
                 "#sparepart-pagination",
-                response.last_page,
-                response.current_page,
+                response.spareparts.last_page,
+                response.spareparts.current_page,
                 "loadSparepartData"
             );
         },
@@ -700,7 +715,13 @@ function loadSuppliersData(page = 1) {
         },
         success: function (response) {
             $("#supplier-tbody").empty();
-            response.data.forEach((supplier) => {
+            response.suppliers.data.forEach((supplier) => {
+                let canUpdate = response.canUpdate
+                    ? `  <button class="blue-button" type="button" onclick='openEditSupplierModal("${supplier.id}", "${supplier.name}", "${supplier.contact_number}", "${supplier.address}")'>Edit</button>`
+                    : "";
+                let canDelete = response.canDelete
+                    ? `         <button class="red-button" type="button" onclick="showDeleteModal('deleteSupplier', '${supplier.id}')">Delete</button>`
+                    : "";
                 $("#supplier-tbody").append(`
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -713,16 +734,16 @@ function loadSuppliersData(page = 1) {
                         ${supplier.address}
                     </td>
                     <td class="px-6 py-4 flex items-center gap-2">
-                        <button class="blue-button" type="button" onclick='openEditSupplierModal("${supplier.id}", "${supplier.name}", "${supplier.contact_number}", "${supplier.address}")'>Edit</button>
-                        <button class="red-button" type="button" onclick="showDeleteModal('deleteSupplier', '${supplier.id}')">Delete</button>
+                        ${canUpdate}
+                        ${canDelete}
                     </td>
                 </tr>
                 `);
             });
             buttonPagination(
                 "#supplier-pagination",
-                response.last_page,
-                response.current_page,
+                response.suppliers.last_page,
+                response.suppliers.current_page,
                 "loadSuppliersData"
             );
         },
@@ -880,7 +901,21 @@ function loadDocumentData(page = 1) {
         },
         success: function (response) {
             $("#document-tbody").empty();
-            response.data.forEach((document) => {
+            response.documents.data.forEach((document) => {
+                let canUpdate = response.canUpdate
+                    ? `   <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" onclick="openEditDocumentModal('${document.id}', '${document.name}', '${document.expiry_date}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
+                            </button>`
+                    : "";
+                let canDelete = response.canDelete
+                    ? `<button class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-2.5 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900" onclick="showDeleteModal('deleteDocument', '${document.id}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                            </button>`
+                    : "";
                 $("#document-tbody").append(`
                 <div class="flex items-center justify-between gap-4 p-2 rounded-xl border border-gray-300 dark:border-gray-700">
                     <div class="flex flex-col gap-2 text-xs text-gray-900 dark:text-white">
@@ -904,20 +939,8 @@ function loadDocumentData(page = 1) {
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                 </svg>
                             </a>
-                            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800" onclick="openEditDocumentModal('${
-                                document.id
-                            }', '${document.name}', '${document.expiry_date}')">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                </svg>
-                            </button>
-                            <button class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-2.5 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900" onclick="showDeleteModal('deleteDocument', '${
-                                document.id
-                            }')">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                </svg>
-                            </button>
+                            ${canUpdate}
+                            ${canDelete}
                         </div>
                     </div>
                 </div>
@@ -925,8 +948,8 @@ function loadDocumentData(page = 1) {
             });
             buttonPagination(
                 "#document-pagination",
-                response.last_page,
-                response.current_page,
+                response.documents.last_page,
+                response.documents.current_page,
                 "loadDocumentData"
             );
         },
@@ -1029,7 +1052,14 @@ function loadUserData(page = 1) {
         },
         success: function (response) {
             $("#user-tbody").empty();
-            response.data.forEach((user) => {
+            response.users.data.forEach((user) => {
+                let canUpdate = response.canUpdate
+                    ? `<button class="blue-button" type="button" onclick='openEditUserModal("${user.id}", "${user.name}", "${user.email}", "${user.role_id}", "${user.is_active}")'>Edit</button>`
+                    : "";
+                let canDelete = response.canDelete
+                    ? ` <button class="red-button
+                        " type="button" onclick="showDeleteModal('deleteUser', '${user.id}')">Delete</button>`
+                    : "";
                 $("#user-tbody").append(`
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -1045,23 +1075,16 @@ function loadUserData(page = 1) {
                         ${user.is_active == 1 ? "Active" : "Inactive"}
                     </td>
                     <td class="px-6 py-4 flex items-center gap-2">
-                        <button class="blue-button" type="button" onclick='openEditUserModal("${
-                            user.id
-                        }", "${user.name}", "${user.email}", "${
-                    user.role_id
-                }", "${user.is_active}")'>Edit</button>
-                        <button class="red-button
-                        " type="button" onclick="showDeleteModal('deleteUser', '${
-                            user.id
-                        }')">Delete</button>
+                        ${canUpdate}
+                        ${canDelete}
                     </td>
                 </tr>
                 `);
             });
             buttonPagination(
                 "#user-pagination",
-                response.last_page,
-                response.current_page,
+                response.users.last_page,
+                response.users.current_page,
                 "loadUserData"
             );
         },
@@ -1161,9 +1184,14 @@ function loadTripData(page = 1) {
             filter: $('input[name="tripStatusFilter"]:checked').val(),
         },
         success: function (response) {
-            console.log(response);
             $("#trip-tbody").empty();
-            response.data.forEach((trip) => {
+            response.trips.data.forEach((trip) => {
+                let editButton = response.canUpdate
+                    ? `<button class="blue-button" onclick="openEditTripModal('${trip.id}', '${trip.user_id}', '${trip.vehicle_id}', '${trip.departure_time}', '${trip.arrival_time}', '${trip.departure_location}', '${trip.arrival_location}')" type="button">Edit</button>`
+                    : "";
+                let deleteButton = response.canDelete
+                    ? `<button class="red-button" onclick="showDeleteModal('deleteTrip', '${trip.id}')" type="button">Delete</button>`
+                    : "";
                 $("#trip-tbody").append(`
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -1194,24 +1222,16 @@ function loadTripData(page = 1) {
                         ${trip.trip_status.name}
                     </td>
                     <td class="px-6 py-4 flex items-center gap-2">
-                        <button class="blue-button" onclick="openEditTripModal('${
-                            trip.id
-                        }', '${trip.user_id}', '${trip.vehicle_id}', '${
-                    trip.departure_time
-                }', '${trip.arrival_time}', '${trip.departure_location}', '${
-                    trip.arrival_location
-                }')" type="button">Edit</button>
-                        <button class="red-button" onclick="showDeleteModal('deleteTrip', '${
-                            trip.id
-                        }')" type="button">Delete</button>
+                        ${editButton}
+                        ${deleteButton}
                     </td>
                 </tr>
                 `);
             });
             buttonPagination(
                 "#trip-pagination",
-                response.last_page,
-                response.current_page,
+                response.trips.last_page,
+                response.trips.current_page,
                 "loadTripData"
             );
         },
@@ -1673,7 +1693,10 @@ function loadVehicleDataForReport(page = 1) {
         success: function (response) {
             console.log(response);
             $("#vehicle-tbody").empty();
-            response.data.forEach((vehicle) => {
+            response.vehicles.data.forEach((vehicle) => {
+                let editButton = response.canUpdate
+                    ? `<button class="green-button" type="button" onclick='openMarkAsFixedModal("${vehicle.id}")'>Mark as fixed</button>`
+                    : "";
                 $("#vehicle-tbody").append(`
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -1690,9 +1713,7 @@ function loadVehicleDataForReport(page = 1) {
                         ${vehicle.vehicle_reports_count}
                     </td>
                     <td class="px-6 py-4 flex items-center gap-2">
-                        <button class="green-button" type="button" onclick='openMarkAsFixedModal("${
-                            vehicle.id
-                        }")'>Mark as fixed</button>
+                        ${editButton}
                         <button class="blue-button" type="button" onclick='openReportDetailsModal("${
                             vehicle.id
                         }")'>Check</button>
@@ -1702,8 +1723,8 @@ function loadVehicleDataForReport(page = 1) {
             });
             buttonPagination(
                 "#vehicle-pagination",
-                response.last_page,
-                response.current_page,
+                response.vehicles.last_page,
+                response.vehicles.current_page,
                 "loadVehicleDataForReport"
             );
         },
@@ -2206,11 +2227,11 @@ function loadRoleData(page = 1) {
                 const permissions = encodeURIComponent(
                     JSON.stringify(element.permissions)
                 );
-                let editButton = true
+                let editButton = response.canUpdate
                     ? `<button class="blue-button" onclick="openEditRoleModal('${element.id}', '${element.name}', '${permissions}')">Edit</button>`
                     : "";
 
-                let deleteButton = true
+                let deleteButton = response.canDelete
                     ? `<button class="red-button" onclick="showDeleteModal('deleteRole','${element.id}')">Delete</button>`
                     : "";
                 $("#role-tbody").append(`

@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\RolePermission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 
 class RoleController extends Controller
@@ -14,6 +15,9 @@ class RoleController extends Controller
     //
     public function index()
     {
+        if (!Gate::allows('moduleAction', ['Role', 'Read'])) {
+            abort(403);
+        }
         $moduleActions = ModuleAction::with('module', 'action')->get();
         $groupedModuleActions = $moduleActions->groupBy('module.id')->map(function ($actions, $moduleId) {
             $moduleName = $actions->first()->module->name;
@@ -34,7 +38,9 @@ class RoleController extends Controller
 
     public function store(Request $request)
     {
-
+        if (!Gate::allows('moduleAction', ['Role', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'roleName' => 'required|string|max:255|unique:roles,name',
             'moduleActions' => 'array',
@@ -71,6 +77,9 @@ class RoleController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!Gate::allows('moduleAction', ['Role', 'Update'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'roleName' => 'required|string|max:255|unique:roles,name,' . $id,
             'moduleActions' => 'array',
@@ -108,6 +117,9 @@ class RoleController extends Controller
 
     public function destroy($id)
     {
+        if (!Gate::allows('moduleAction', ['Role', 'Delete'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $role = Role::find($id);
 
         if ($role == null) {
@@ -120,7 +132,12 @@ class RoleController extends Controller
 
     public function getRolesData()
     {
+        if (!Gate::allows('moduleAction', ['Role', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $role = Role::with('permissions')->paginate(8);
-        return response()->json(compact('role'));
+        $canUpdate = Gate::allows('moduleAction', ['Role', 'Update']);
+        $canDelete = Gate::allows('moduleAction', ['Role', 'Delete']);
+        return response()->json(compact('role', 'canUpdate', 'canDelete'));
     }
 }

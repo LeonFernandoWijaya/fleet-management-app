@@ -6,6 +6,7 @@ use App\Models\Vehicle;
 use App\Models\VehicleDocument;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -14,11 +15,17 @@ class VehicleDocumentController extends Controller
     //
     public function index()
     {
+        if (!Gate::allows('moduleAction', ['Document', 'Read'])) {
+            abort(403);
+        }
         return view('documents.index');
     }
 
     public function getVehicleDataForDocument(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Document', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $search = $request->search;
         $currentDate = Carbon::now();
 
@@ -38,6 +45,9 @@ class VehicleDocumentController extends Controller
 
     public function getDocumentsData(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Document', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $vehicleId = $request->vehicle_id;
         $currentDate = Carbon::now();
 
@@ -47,11 +57,16 @@ class VehicleDocumentController extends Controller
             ->orderByDesc('is_expired')
             ->paginate(5);
 
-        return response()->json($documents);
+        $canUpdate = Gate::allows('moduleAction', ['Document', 'Update']);
+        $canDelete = Gate::allows('moduleAction', ['Document', 'Delete']);
+        return response()->json(compact('documents', 'canUpdate', 'canDelete'));
     }
 
     public function store(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Document', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'vehicle_id' => 'required|exists:vehicles,id',
             'document-name' => 'required',
@@ -85,6 +100,9 @@ class VehicleDocumentController extends Controller
 
     public function download($filename)
     {
+        if (!Gate::allows('moduleAction', ['Document', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $filePath  = 'documents/' . $filename;
 
         if (Storage::disk('local')->exists($filePath)) {
@@ -96,6 +114,9 @@ class VehicleDocumentController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!Gate::allows('moduleAction', ['Document', 'Update'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'document-name' => 'required',
             'document-expiry-date' => 'required|date',
@@ -152,6 +173,9 @@ class VehicleDocumentController extends Controller
 
     public function destroy($id)
     {
+        if (!Gate::allows('moduleAction', ['Document', 'Delete'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $document = VehicleDocument::find($id);
 
         if ($document->path != null) {

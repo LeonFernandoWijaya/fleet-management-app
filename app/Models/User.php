@@ -64,4 +64,17 @@ class User extends Authenticatable
     {
         return self::where('id', $id)->update($data);
     }
+
+    public function hasModuleAction(string $moduleName, string $action)
+    {
+        $moduleId = Module::where('name', $moduleName)->first()->id;
+        $actionId = Action::where('name', $action)->first()->id;
+
+        if ($moduleId && $actionId) {
+            $moduleActionId = ModuleAction::where('module_id', $moduleId)->where('action_id', $actionId)->first()->id;
+            return RolePermission::where('role_id', $this->role_id)->where('module_action_id', $moduleActionId)->pluck('is_active')->first();
+        } else {
+            return false;
+        }
+    }
 }

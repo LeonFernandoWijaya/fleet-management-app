@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 
 class TripController extends Controller
@@ -16,6 +17,9 @@ class TripController extends Controller
 
     public function index()
     {
+        if (!Gate::allows('moduleAction', ['Trip', 'Read'])) {
+            abort(403);
+        }
         $tripStatuses = TripStatus::all();
         return view('trips.index', compact('tripStatuses'));
     }
@@ -23,6 +27,9 @@ class TripController extends Controller
 
     public function getTripsData(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Trip', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $search = $request->search;
         $filter = $request->filter;
 
@@ -42,11 +49,17 @@ class TripController extends Controller
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-        return response()->json($trips);
+
+        $canUpdate = Gate::allows('moduleAction', ['Trip', 'Update']);
+        $canDelete = Gate::allows('moduleAction', ['Trip', 'Delete']);
+        return response()->json(compact('trips', 'canUpdate', 'canDelete'));
     }
 
     public function getDriverData(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Trip', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $driver = $request->value;
         $drivers = User::with('role')->whereHas('role', function ($query) {
             $query->where('name', 'driver');
@@ -63,6 +76,9 @@ class TripController extends Controller
 
     public function getVehicleData(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Trip', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $vehicle = $request->value;
         $vehicles = Vehicle::with('vehicleStatus', 'vehicleType')->whereHas('vehicleStatus', function ($query) {
             $query->where('name', 'available');
@@ -76,6 +92,9 @@ class TripController extends Controller
 
     public function store(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Trip', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'trip-vehicle' => 'required|exists:vehicles,id',
             'trip-driver' => 'required|exists:users,id',
@@ -128,6 +147,9 @@ class TripController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!Gate::allows('moduleAction', ['Trip', 'Update'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'trip-vehicle' => 'required|exists:vehicles,id',
             'trip-driver' => 'required|exists:users,id',
@@ -179,7 +201,7 @@ class TripController extends Controller
                 'arrival_location' => $request->input('trip-arrival-location'),
             ];
 
-            Trip::updateRecord($id, $data);
+            Trip::updateRecord($data, $id);
             DB::commit();
             return response()->json(['message' => 'Trip updated successfully'], 200);
         } catch (\Exception $e) {
@@ -190,6 +212,9 @@ class TripController extends Controller
 
     public function destroy($id)
     {
+        if (!Gate::allows('moduleAction', ['Trip', 'Delete'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         DB::beginTransaction();
         try {
             User::where('id', Trip::find($id)->user_id)->update(['is_available' => 1]);

@@ -7,6 +7,7 @@ use App\Models\VehicleMaintenance;
 use App\Models\VehicleStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 
 class MaintenanceController extends Controller
@@ -14,12 +15,18 @@ class MaintenanceController extends Controller
     //
     public function index()
     {
+        if (!Gate::allows('moduleAction', ['Maintenance', 'Read'])) {
+            abort(403);
+        }
         $vehicleStatuses = VehicleStatus::all();
         return view('maintenances.index', compact('vehicleStatuses'));
     }
 
     public function changeVehicleStatus($id)
     {
+        if (!Gate::allows('moduleAction', ['Maintenance', 'Update'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $vehicle = Vehicle::with('vehicleStatus')->find($id);
         $vehicleStatusName = $vehicle->vehicleStatus->name;
         $vehicleStatuses = VehicleStatus::all();
@@ -41,14 +48,22 @@ class MaintenanceController extends Controller
 
     public function getMaintenancesData(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Maintenance', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $vehicleId = $request->input('vehicle_id');
         $vehicleMaintenance = VehicleMaintenance::with('vehicle')->where('vehicle_id', $vehicleId)->orderby('date', 'desc')->paginate(5);
+        $canUpdate = Gate::allows('moduleAction', ['Maintenance', 'Update']);
+        $canDelete = Gate::allows('moduleAction', ['Maintenance', 'Delete']);
 
-        return response()->json($vehicleMaintenance, 200);
+        return response()->json(compact('vehicleMaintenance', 'canUpdate', 'canDelete'));
     }
 
     public function getVehicleDataForMaintenance(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Maintenance', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $filter = $request->input('filter');
         $search = $request->input('search');
 
@@ -68,11 +83,15 @@ class MaintenanceController extends Controller
             ->orderByDesc('needs_service')
             ->paginate(10);
 
-        return response()->json($vehicles, 200);
+        $canUpdate = Gate::allows('moduleAction', ['Maintenance', 'Update']);
+        return response()->json(compact('vehicles', 'canUpdate'));
     }
 
     public function store(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Maintenance', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'vehicle_id' => 'required|exists:vehicles,id',
             'maintenance-date' => 'required|date',
@@ -100,6 +119,9 @@ class MaintenanceController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!Gate::allows('moduleAction', ['Maintenance', 'Update'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'maintenance-date' => 'required|date',
             'maintenance-details' => 'required|string|max:255',
@@ -127,6 +149,9 @@ class MaintenanceController extends Controller
 
     public function destroy($id)
     {
+        if (!Gate::allows('moduleAction', ['Maintenance', 'Delete'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         try {
             VehicleMaintenance::where('id', $id)->delete();
         } catch (\Exception $e) {

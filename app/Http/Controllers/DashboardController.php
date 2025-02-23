@@ -7,19 +7,26 @@ use App\Models\TripStatus;
 use App\Models\Vehicle;
 use App\Models\VehicleReport;
 use App\Models\VehicleStatus;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
     //
     public function index()
     {
+        if (!Gate::allows('moduleAction', ['Dashboard', 'Read'])) {
+            abort(403);
+        }
         return view('dashboard.index');
     }
 
     public function getVehicleGroupByStatus()
     {
+        if (!Gate::allows('moduleAction', ['Dashboard', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
+
         $vehicles = Vehicle::select('vehicle_status_id', DB::raw('count(*) as total'))
             ->groupBy('vehicle_status_id')
             ->get();
@@ -49,6 +56,9 @@ class DashboardController extends Controller
 
     public function getTripsGroupByStatus()
     {
+        if (!Gate::allows('moduleAction', ['Dashboard', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $trips = Trip::select('trip_status_id', DB::raw('count(*) as total'))
             ->groupBy('trip_status_id')
             ->get();
@@ -78,6 +88,9 @@ class DashboardController extends Controller
 
     public function getVehicleReportsGroupByFixed()
     {
+        if (!Gate::allows('moduleAction', ['Dashboard', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $vehicleReports = VehicleReport::select('is_fixed', DB::raw('count(*) as total'))
             ->groupBy('is_fixed')
             ->get();
@@ -88,6 +101,9 @@ class DashboardController extends Controller
 
     public function getMaintenancesGroupByReserviceLevel()
     {
+        if (!Gate::allows('moduleAction', ['Dashboard', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $maintenances = DB::table('vehicles')
             ->leftJoin('vehicle_maintenances', function ($join) {
                 $join->on('vehicles.id', '=', 'vehicle_maintenances.vehicle_id')
@@ -103,6 +119,9 @@ class DashboardController extends Controller
 
     public function getSparepartGroupByReorderLevel()
     {
+        if (!Gate::allows('moduleAction', ['Dashboard', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $spareparts = DB::table('spareparts')
             ->select(
                 DB::raw('SUM(CASE WHEN stock <= reorder_level THEN 1 ELSE 0 END) as need_restock'),
@@ -114,6 +133,9 @@ class DashboardController extends Controller
 
     public function getDocumentGroupByExpiryDate()
     {
+        if (!Gate::allows('moduleAction', ['Dashboard', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $documents = DB::table('vehicle_documents')
             ->select(
                 DB::raw('SUM(CASE WHEN expiry_date >= NOW() THEN 1 ELSE 0 END) as not_expired'),

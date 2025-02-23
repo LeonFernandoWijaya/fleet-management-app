@@ -6,12 +6,16 @@ use App\Models\Vehicle;
 use App\Models\VehicleStatus;
 use App\Models\VehicleType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 
 class VehicleController extends Controller
 {
     public function index()
     {
+        if (!Gate::allows('moduleAction', ['Vehicle', 'Read'])) {
+            abort(403);
+        }
         $vehicleTypes = VehicleType::all();
         $vehicleStatuses = VehicleStatus::all();
         return view('vehicles.index', compact('vehicleTypes', 'vehicleStatuses'));
@@ -19,6 +23,9 @@ class VehicleController extends Controller
 
     public function store(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Vehicle', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'vehicle-type' => 'required|exists:vehicle_types,id',
             'vehicle-status' => 'required|exists:vehicle_statuses,id',
@@ -62,6 +69,9 @@ class VehicleController extends Controller
 
     public function getVehiclesData(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['Vehicle', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $search = $request->input('search');
         $filter = $request->input('filter');
         $vehicles = Vehicle::with('vehicleType', 'vehicleStatus')
@@ -74,11 +84,17 @@ class VehicleController extends Controller
                     ->orWhere('model', 'like', '%' . $search . '%');
             })
             ->paginate(10);
-        return response()->json($vehicles);
+
+        $canUpdate = Gate::allows('moduleAction', ['Vehicle', 'Update']);
+        $canDelete = Gate::allows('moduleAction', ['Vehicle', 'Delete']);
+        return response()->json(compact('vehicles', 'canUpdate', 'canDelete'));
     }
 
     public function update(Request $request, $id)
     {
+        if (!Gate::allows('moduleAction', ['Vehicle', 'Update'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'vehicle-type' => 'required|exists:vehicle_types,id',
             'vehicle-status' => 'required|exists:vehicle_statuses,id',
@@ -123,6 +139,9 @@ class VehicleController extends Controller
 
     public function destroy($id)
     {
+        if (!Gate::allows('moduleAction', ['Vehicle', 'Delete'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         try {
             Vehicle::where('id', $id)->delete();
         } catch (\Exception $e) {

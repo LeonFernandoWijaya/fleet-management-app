@@ -6,18 +6,25 @@ use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 class UserController extends Controller
 {
     //
     public function index()
     {
+        if (!Gate::allows('moduleAction', ['User', 'Read'])) {
+            abort(403);
+        }
         $roles = Role::all();
         return view('users.index', compact('roles'));
     }
 
     public function store(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['User', 'Create'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'user-name' => 'required|string|max:255',
             'user-email' => 'required|email|max:255|unique:users,email',
@@ -47,6 +54,9 @@ class UserController extends Controller
 
     public function getUsersData(Request $request)
     {
+        if (!Gate::allows('moduleAction', ['User', 'Read'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $search = $request->input('search');
         $status = $request->input('status');
         $users = User::with('role')->when($search, function ($query) use ($search) {
@@ -58,11 +68,16 @@ class UserController extends Controller
                 return $query->where('is_active', 0);
             }
         })->paginate(10);
-        return response()->json($users);
+        $canUpdate = Gate::allows('moduleAction', ['User', 'Update']);
+        $canDelete = Gate::allows('moduleAction', ['User', 'Delete']);
+        return response()->json(compact('users', 'canUpdate', 'canDelete'));
     }
 
     public function update(Request $request, $id)
     {
+        if (!Gate::allows('moduleAction', ['User', 'Update'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'user-name' => 'required|string|max:255',
             'user-email' => 'required|email|max:255|unique:users,email,' . $id,
@@ -91,6 +106,9 @@ class UserController extends Controller
 
     public function destroy($id)
     {
+        if (!Gate::allows('moduleAction', ['User', 'Delete'])) {
+            return response()->json(['errors' => 'Unauthorized'], 403);
+        }
         try {
             User::where('id', $id)->delete();
             return response()->json(['message' => 'User deleted successfully!']);
