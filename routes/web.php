@@ -23,7 +23,7 @@ Route::get('/', function () {
     return redirect('/track');
 });
 
-Route::group(['middleware' => ['auth']], function () {
+Route::group(['middleware' => ['auth', 'is_active']], function () {
     Route::post('/change-password', [AuthController::class, 'changePassword']);
     Route::get('/logout', [AuthController::class, 'destroy']);
 
