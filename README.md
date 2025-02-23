@@ -7,8 +7,8 @@ Ikuti langkah-langkah berikut untuk menginstal dan menjalankan proyek ini di lin
 ### 1️⃣ Clone Repository
 Clone repository dari GitHub menggunakan perintah berikut:
 ```
-git clone <URL_REPOSITORY>
-cd <NAMA_FOLDER_PROYEK>
+git clone https://github.com/LeonFernandoWijaya/fleet-management-app.git
+cd fleet-management-app
 ```
 
 ### 2️⃣ Instalasi Dependensi
