@@ -32,7 +32,7 @@
                 History
             </button>
         </div>
-        <div id="mapid" class="w-full h-64 rounded-2xl"></div>
+        <div id="mapid" class="w-full h-64 rounded-2xl z-0"></div>
         <div class="px-4 pt-4 pb-14 rounded-lg shadow-md border border-gray-300 dark:border-gray-700 space-y-4 bg-gray-50 dark:bg-gray-800"
             id="track-tbody">
 
